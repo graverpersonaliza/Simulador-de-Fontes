@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prévia Gravação Laser</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&family=Montserrat&family=Oswald&family=Lora&family=Merriweather&family=Open+Sans&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Great+Vibes&family=Pacifico&family=Lobster&family=Allura&family=Sacramento&family=Satisfy&family=Alex+Brush&family=Courgette&family=Cookie&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Monotype Corsiva';
+      src: local('Monotype Corsiva');
+    }
+    @font-face {
+      font-family: 'Cooper Black';
+      src: local('Cooper Black');
+    }
+    @font-face {
+      font-family: 'Comic Sans MS';
+      src: local('Comic Sans MS');
+    }
+    @font-face {
+      font-family: 'News701 BT';
+      src: local('News701 BT');
+    }
+    @font-face {
+      font-family: 'Bodoni Becker';
+      src: local('Bodoni Becker');
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    .controls {
+      width: 300px;
+      background: #f0f0f0;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .preview {
+      flex: 1;
+      position: relative;
+      background: #fff;
+    }
+    input, select, button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      font-size: 1rem;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    .icon-list button {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 5px;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h2>Prévia Gravação Laser</h2>
+    <label>Texto</label>
+    <input type="text" id="textInput" placeholder="Digite o nome ou frase" />
+<label>Tamanho do Texto (mm)</label>
+<input type="range" id="sizeInput" min="10" max="150" step="1" value="60" />
+    <label>Fonte</label>
+    <select id="fontSelect">
+  <optgroup label="Cursivas">
+    <option value="Dancing Script">Dancing Script</option>
+    <option value="Great Vibes">Great Vibes</option>
+    <option value="Pacifico">Pacifico</option>
+    <option value="Lobster">Lobster</option>
+    <option value="Allura">Allura</option>
+    <option value="Sacramento">Sacramento</option>
+    <option value="Satisfy">Satisfy</option>
+    <option value="Alex Brush">Alex Brush</option>
+    <option value="Courgette">Courgette</option>
+    <option value="Cookie">Cookie</option>
+  </optgroup>
+  <optgroup label="Formais">
+    <option value="Monotype Corsiva">Monotype Corsiva</option>
+    <option value="Cooper Black">Cooper Black</option>
+    <option value="Comic Sans MS">Comic Sans MS</option>
+    <option value="Oswald">Oswald</option>
+    <option value="Roboto">Roboto</option>
+    <option value="Montserrat">Montserrat</option>
+    <option value="Playfair Display">Playfair Display</option>
+    <option value="Lora">Lora</option>
+    <option value="Merriweather">Merriweather</option>
+    <option value="Open Sans">Open Sans</option>
+  </optgroup>
+</select>
+    <p id="realSizeText" style="margin-top:-5px;font-size:0.9rem;color:#555">Tamanho estimado: 0 x 0 mm</p>
+    <label>Ângulo (°)</label>
+    <input type="range" id="angleInput" min="-180" max="180" step="1" value="0" list="angleTicks" />
+    <datalist id="angleTicks">
+      <option value="-180"></option>
+      <option value="-90"></option>
+      <option value="0"></option>
+      <option value="90"></option>
+      <option value="180"></option>
+    </datalist>
+    <label>Altura (%)</label>
+    <input type="range" id="heightInput" min="10" max="200" step="1" value="100" list="heightTicks" />
+    <datalist id="heightTicks">
+      <option value="10"></option>
+      <option value="50"></option>
+      <option value="100"></option>
+      <option value="150"></option>
+      <option value="200"></option>
+    </datalist>
+    <label>Largura (%)</label>
+    <input type="range" id="widthInput" min="10" max="200" step="1" value="100" list="widthTicks" />
+    <datalist id="widthTicks">
+      <option value="10"></option>
+      <option value="50"></option>
+      <option value="100"></option>
+      <option value="150"></option>
+      <option value="200"></option>
+    </datalist>
+    <label>Contorno (mm)</label>
+    <input type="range" id="outlineInput" min="0" max="10" step="0.1" value="0" />
+    <label>Curvatura</label>
+    <select id="curveDirection">
+      <option value="none">Sem curva</option>
+      <option value="up">Curvar para cima</option>
+      <option value="down">Curvar para baixo</option>
+    </select>
+    <input type="range" id="curveInput" min="0" max="200" value="0" step="1" />
+    <label>Ícones Pretos</label>
+    <input type="file" id="iconUpload" multiple accept="image/svg+xml,image/png" />
+    <select id="prebuiltIcons">
+      <option value="">Escolha um ícone</option>
+      <option value="❤">❤ Coração cheio </option>
+      <option value="♡">♡ Coração vazado </option>
+      <option value="★">★ Estrela</option>
+      <option value="●">● Círculo</option>
+      <option value="✿">✿ Flor</option>
+      <option value="☘">☘ Folha</option>
+    </select>
+    <div class="icon-list" id="iconList"></div>
+    <button onclick="saveAsPNG()">Salvar em PNG</button>
+    <button onclick="saveAsSVG()">Salvar em SVG</button>
+  </div>
+  <div class="preview">
+    <canvas id="designCanvas" width="1000" height="500"></canvas>
+  </div>
+  <script>
+// JavaScript completo aqui
+// (o código original será inserido abaixo sem alterações)
+
+const canvas = document.getElementById('designCanvas');
+const ctx = canvas.getContext('2d');
+let icons = [];
+let dragging = null;
+canvas.dataset.textX = canvas.width / 2;
+canvas.dataset.textY = canvas.height / 2;
+
+function drawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const text = document.getElementById('textInput').value;
+  const font = document.getElementById('fontSelect').value;
+  const size = parseFloat(document.getElementById('sizeInput').value);
+  const angle = parseFloat(document.getElementById('angleInput').value);
+  const height = parseFloat(document.getElementById('heightInput').value) / 100;
+  const width = parseFloat(document.getElementById('widthInput').value) / 100;
+  const outline = parseFloat(document.getElementById('outlineInput').value);
+  const curve = parseFloat(document.getElementById('curveInput').value);
+  const curveDir = document.getElementById('curveDirection').value;
+  const textX = parseFloat(canvas.dataset.textX);
+  const textY = parseFloat(canvas.dataset.textY);
+
+  ctx.save();
+  ctx.translate(textX, textY);
+  ctx.rotate((angle * Math.PI) / 180);
+  ctx.scale(width, height);
+  ctx.font = `${size}px '${font}', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = outline;
+  ctx.strokeStyle = '#000';
+  ctx.fillStyle = '#000';
+
+  if (text && (curve === 0 || curveDir === 'none')) {
+    if (outline > 0) ctx.strokeText(text, 0, 0);
+    ctx.fillText(text, 0, 0);
+  } else if (text && curve > 0 && curveDir !== 'none') {
+    const radius = 200 + curve;
+    const totalAngle = (curve * Math.PI) / 90;
+    const metrics = [...text].map(char => ctx.measureText(char).width);
+    const totalTextWidth = metrics.reduce((a, b) => a + b, 0);
+    const charAngle = totalAngle / totalTextWidth;
+    [...text].forEach((char, i) => {
+      const charWidth = metrics[i];
+      const charCenter = metrics.slice(0, i).reduce((a, b) => a + b, 0) + charWidth / 2;
+      const theta = (charCenter - totalTextWidth / 2) * charAngle;
+      const dir = curveDir === 'up' ? -1 : 1;
+      const x = radius * Math.sin(theta);
+      const y = dir * radius * (1 - Math.cos(theta));
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(theta * dir);
+      if (outline > 0) ctx.strokeText(char, 0, 0);
+      ctx.fillText(char, 0, 0);
+      ctx.restore();
+    });
+  }
+
+  ctx.restore();
+
+  // Atualiza tamanho estimado do texto em mm
+  const dpi = 96;
+  const mmPorPx = 25.4 / dpi;
+
+  let totalWidth = 0;
+  let totalHeight = 0;
+
+  // Calcula o tamanho do texto
+  if (text) {
+    ctx.font = `${size}px '${font}', sans-serif`;
+    const textMetrics = ctx.measureText(text);
+    const textWidth = textMetrics.width * width;
+    const textHeight = size * height;
+    totalWidth = Math.max(totalWidth, textWidth);
+    totalHeight = Math.max(totalHeight, textHeight);
+  }
+
+  // Calcula o tamanho dos ícones
+  icons.forEach(icon => {
+    const iconWidth = icon.size;
+    const iconHeight = icon.size;
+    totalWidth = Math.max(totalWidth, iconWidth);
+    totalHeight = Math.max(totalHeight, iconHeight);
+  });
+
+  const mmW = totalWidth * mmPorPx;
+  const mmH = totalHeight * mmPorPx;
+
+  const info = document.getElementById('realSizeText');
+  if (info) {
+    info.textContent = `Altura: ${mmH.toFixed(1)}mm x Largura: ${mmW.toFixed(1)}mm`;
+  }
+
+  const iconList = document.getElementById('iconList');
+  iconList.innerHTML = '';
+  icons.forEach((icon, index) => {
+    ctx.save();
+    ctx.translate(icon.x + icon.size / 2, icon.y + icon.size / 2);
+    ctx.rotate((icon.angle || 0) * Math.PI / 180);
+    if (icon.loaded) {
+      ctx.drawImage(icon.img, -icon.size / 2, -icon.size / 2, icon.size, icon.size);
+    } else if (icon.char) {
+      ctx.font = `${icon.size}px sans-serif`;
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(icon.char, 0, 0);
+    }
+    ctx.restore();
+
+      const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <span style="font-size:18px;">${icon.char || '🖼️ Ícone'}</span>
+      <input type="range" min="10" max="200" value="${icon.size}" data-index="${index}" />
+      <input type="range" min="-180" max="180" value="${icon.angle || 0}" data-rotate="${index}" title="Rotação" />
+      <button data-remove="${index}">X</button>
+    `;
+    iconList.appendChild(wrapper);
+  });
+
+  iconList.querySelectorAll('input[type="range"][data-index]').forEach(slider => {
+    slider.addEventListener('input', e => {
+      const i = parseInt(e.target.dataset.index);
+      icons[i].size = parseInt(e.target.value);
+      drawCanvas();
+    });
+  });
+
+  iconList.querySelectorAll('input[type="range"][data-rotate]').forEach(rotator => {
+    rotator.addEventListener('input', e => {
+      const i = parseInt(e.target.dataset.rotate);
+      icons[i].angle = parseInt(e.target.value);
+      drawCanvas();
+    });
+  });
+
+  iconList.querySelectorAll('button[data-remove]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const i = parseInt(e.target.dataset.remove);
+      icons.splice(i, 1);
+      drawCanvas();
+    });
+  });
+}
+
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', drawCanvas);
+});
+
+document.getElementById('prebuiltIcons').addEventListener('change', e => {
+  if (!e.target.value) return;
+  icons.push({ char: e.target.value, x: 100, y: 100, size: 32, angle: 0 });
+  drawCanvas();
+});
+
+document.getElementById('iconUpload').addEventListener('change', e => {
+  for (let file of e.target.files) {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      icons.push({ img, loaded: true, x: 100, y: 100, size: 40, angle: 0 });
+      drawCanvas();
+    };
+    img.src = url;
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  for (let icon of icons) {
+    const size = icon.size || 32;
+    const centerX = icon.x + size / 2;
+    const centerY = icon.y + size / 2;
+    const radius = size / 1.8; // aumenta sensibilidade
+    if (Math.hypot(x - centerX, y - centerY) <= radius) {
+      dragging = { icon, offsetX: x - icon.x, offsetY: y - icon.y };
+      return;
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  if (dragging.icon) {
+    dragging.icon.x = x - dragging.offsetX;
+    dragging.icon.y = y - dragging.offsetY;
+    drawCanvas();
+  }
+});
+
+canvas.addEventListener('mouseup', () => dragging = null);
+
+canvas.addEventListener('touchstart', e => {
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  for (let icon of icons) {
+    const size = icon.size || 32;
+    const centerX = icon.x + size / 2;
+    const centerY = icon.y + size / 2;
+    const radius = size / 1.8; // aumenta sensibilidade
+    if (Math.hypot(x - centerX, y - centerY) <= radius) {
+      dragging = { icon, offsetX: x - icon.x, offsetY: y - icon.y };
+      return;
+    }
+  }
+});
+
+canvas.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  if (dragging.icon) {
+    dragging.icon.x = x - dragging.offsetX;
+    dragging.icon.y = y - dragging.offsetY;
+    drawCanvas();
+  }
+  e.preventDefault();
+});
+
+canvas.addEventListener('touchend', () => dragging = null);
+
+function saveAsPNG() {
+  const scale = 4; // 4x mais resolução
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = canvas.width * scale;
+  tempCanvas.height = canvas.height * scale;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.scale(scale, scale);
+  tempCtx.drawImage(canvas, 0, 0);
+
+  const dataURL = tempCanvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.href = dataURL;
+  link.download = "gravacao_hd.png";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function saveAsSVG() {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svgElem = document.createElementNS(svgNS, 'svg');
+  svgElem.setAttribute('xmlns', svgNS);
+  svgElem.setAttribute('width', canvas.width);
+  svgElem.setAttribute('height', canvas.height);
+
+  const image = new Image();
+  image.onload = () => {
+    const canvasTemp = document.createElement('canvas');
+    canvasTemp.width = canvas.width;
+    canvasTemp.height = canvas.height;
+    const ctxTemp = canvasTemp.getContext('2d');
+    ctxTemp.drawImage(image, 0, 0);
+    const imgData = canvasTemp.toDataURL('image/png');
+
+    const imageElem = document.createElementNS(svgNS, 'image');
+    imageElem.setAttributeNS(null, 'href', imgData);
+    imageElem.setAttribute('width', canvas.width);
+    imageElem.setAttribute('height', canvas.height);
+    svgElem.appendChild(imageElem);
+
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgElem);
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'gravacao.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  image.src = canvas.toDataURL('image/png');
+}
+
+</script>
+</body>
+</html>
