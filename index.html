@@ -166,7 +166,7 @@ let dragging = null;
 canvas.dataset.textX = canvas.width / 2;
 canvas.dataset.textY = canvas.height / 2;
 
-function drawCanvas() {
+async function drawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const text = document.getElementById('textInput').value;
   const font = document.getElementById('fontSelect').value;
@@ -184,7 +184,7 @@ function drawCanvas() {
   ctx.translate(textX, textY);
   ctx.rotate((angle * Math.PI) / 180);
   ctx.scale(width, height);
-  ctx.font = `${size}px '${font}', sans-serif`;
+  ctx.font = `${size}px "${font}"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineWidth = outline;
@@ -439,6 +439,7 @@ function saveAsSVG() {
     document.body.removeChild(link);
   };
   image.src = canvas.toDataURL('image/png');
+  document.getElementById('fontSelect').addEventListener('change', drawCanvas);
 }
 
 </script>
