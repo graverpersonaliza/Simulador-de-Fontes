@@ -171,6 +171,7 @@ async function drawCanvas() {
   const text = document.getElementById('textInput').value;
   const font = document.getElementById('fontSelect').value;
   const size = parseFloat(document.getElementById('sizeInput').value);
+  await loadFont(font, size);
   const angle = parseFloat(document.getElementById('angleInput').value);
   const height = parseFloat(document.getElementById('heightInput').value) / 100;
   const width = parseFloat(document.getElementById('widthInput').value) / 100;
