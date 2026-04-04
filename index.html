@@ -14,7 +14,7 @@
     @font-face { font-family: 'Bodoni Becker'; src: local('Bodoni Becker'); }
 
     :root {
-      --panel-width: 320px;
+      --panel-width: 280px;
       --canvas-display-width: 567px; /* ~150 mm at 96 dpi */
       --canvas-display-height: 378px; /* ~100 mm at 96 dpi */
       --base-width: 1000;
@@ -213,6 +213,25 @@
       color: #2563eb;
       font-weight: 700;
     }
+
+    @media (max-width: 900px) {
+      :root {
+        --panel-width: 230px;
+        --canvas-display-width: 520px;
+        --canvas-display-height: 347px;
+      }
+      .controls {
+        padding: 12px;
+      }
+      input, select, button {
+        font-size: 0.94rem;
+        padding: 7px;
+      }
+      .preview {
+        padding: 12px 12px 12px 4px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -220,13 +239,13 @@
     <h2>Simulador de Fontes Gravação Laser</h2>
 
     <label for="textInput">Texto</label>
-    <input type="text" id="textInput" autocomplete="off" placeholder="Digite o nome ou frase" />
+    <input type="text" id="textInput" placeholder="Digite o nome ou frase" />
     <div class="toolbar-4 compact-text-tools">
       <button type="button" id="addTextBtn">Adicionar</button>
       <button type="button" id="centerTextBtn">Centralizar</button>
       <button type="button" id="deleteTextBtn">Excluir</button>
     </div>
-    <div class="canvas-help">Digite um nome ou frase e clique em Adicionar. Clique no texto no canvas para mover. No PC, use Ctrl + roda do mouse para aumentar ou diminuir o texto selecionado.</div>
+    <div class="canvas-help">Digite um nome ou frase e clique em Adicionar. Ou toque/clique numa área vazia do canvas para criar outro texto. Clique no texto para selecionar, mover e editar.</div>
 
 
     <label for="fontSelect">Fonte</label>
@@ -794,17 +813,18 @@
       rebuildIconControls();
     }
 
-    function addText() {
+    function addText(x = null, y = null) {
       const input = document.getElementById('textInput');
       const val = input.value.trim();
       if (!val) return;
 
-      const pos = getNextTextPosition();
+      const pos = (x != null && y != null) ? { x, y } : getNextTextPosition();
       const t = createTextFromControls(pos.x, pos.y);
       texts.push(t);
 
+      selectedTextId = t.id;
+      applyTextToControls(t);
       input.value = '';
-      selectedTextId = null;
       drawCanvas();
     }
 
@@ -1002,8 +1022,13 @@
         dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
         drawCanvas();
       } else {
-        selectedTextId = null;
-        drawCanvas();
+        const draftVal = document.getElementById('textInput').value.trim();
+        if (draftVal) {
+          addText(p.x, p.y);
+        } else {
+          selectedTextId = null;
+          drawCanvas();
+        }
       }
     });
 
@@ -1232,36 +1257,6 @@
     document.getElementById('savePngBtn').addEventListener('click', saveAsPNG);
     document.getElementById('saveSvgBtn').addEventListener('click', saveAsSVG);
 
-    const DEFAULT_CONTROL_VALUES = {
-      textInput: '',
-      fontSelect: 'Dancing Script',
-      sizeInput: '10',
-      angleInput: '0',
-      heightInput: '100',
-      widthInput: '100',
-      outlineInput: '0',
-      curveDirection: 'none',
-      curveInput: '0',
-      curveSpreadInput: '100',
-      prebuiltIcons: ''
-    };
-
-    function resetControlsToDefaults() {
-      Object.entries(DEFAULT_CONTROL_VALUES).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.value = value;
-      });
-      selectedTextId = null;
-    }
-
-    window.addEventListener('pageshow', () => {
-      resetControlsToDefaults();
-      drawCanvas();
-    });
-
-
-    resetControlsToDefaults();
     drawCanvas();
   </script>
 </body>
