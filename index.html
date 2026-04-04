@@ -167,9 +167,22 @@
 
     .toolbar-4 {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.08fr);
+      gap: 4px;
       margin-bottom: 8px;
+    }
+
+    .compact-text-tools button {
+      padding: 6px 2px;
+      font-size: 0.78rem;
+      line-height: 1.1;
+      margin-bottom: 0;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    #deleteTextBtn {
+      letter-spacing: -0.01em;
     }
 
     .small {
