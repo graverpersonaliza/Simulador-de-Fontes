@@ -17,8 +17,8 @@
       --panel-width: 320px;
       --canvas-display-width: 567px; /* ~150 mm at 96 dpi */
       --canvas-display-height: 378px; /* ~100 mm at 96 dpi */
-      --base-width: 1800px;
-      --base-height: 1200px;
+      --base-width: 1000;
+      --base-height: 667;
     }
 
     * { box-sizing: border-box; }
@@ -117,6 +117,11 @@
       top: 18px;
       touch-action: none;
       image-rendering: auto;
+      cursor: grab;
+    }
+
+    .preview canvas:active {
+      cursor: grabbing;
     }
 
     .inline-row {
@@ -126,7 +131,10 @@
       align-items: center;
     }
 
-    .icon-list > div {
+    .text-list { display: none; }
+
+    .icon-list > div,
+    .text-list > div {
       border: 1px solid #dadada;
       border-radius: 8px;
       background: #fff;
@@ -134,18 +142,34 @@
       margin-bottom: 10px;
     }
 
-    .icon-list button {
+    .icon-list button,
+    .text-list button {
       border: 0;
-      background: #e74c3c;
       color: #fff;
       cursor: pointer;
       margin-top: 4px;
+      border-radius: 6px;
+      padding: 7px 8px;
+    }
+
+    .text-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     .toolbar {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
+    }
+
+    .toolbar-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     .small {
@@ -172,6 +196,23 @@
       border: none;
       font-weight: 700;
     }
+
+    #addTextBtn { background: #2563eb; color: #fff; border: none; font-weight: 700; }
+        #deleteTextBtn { background: #e74c3c; color: #fff; border: none; font-weight: 700; }
+    #centerTextBtn { background: #ea580c; color: #fff; border: none; font-weight: 700; }
+
+    .selected-layer {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.14);
+    }
+
+    .canvas-help {
+      margin-top: 4px;
+      margin-bottom: 12px;
+      font-size: .84rem;
+      color: #2563eb;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -180,6 +221,13 @@
 
     <label for="textInput">Texto</label>
     <input type="text" id="textInput" placeholder="Digite o nome ou frase" />
+    <div class="toolbar-4 compact-text-tools">
+      <button type="button" id="addTextBtn">Adicionar</button>
+      <button type="button" id="centerTextBtn">Centralizar</button>
+      <button type="button" id="deleteTextBtn">Excluir</button>
+    </div>
+    <div class="canvas-help">Digite um nome ou frase e clique em Adicionar. Clique no texto no canvas para mover. No PC, use Ctrl + roda do mouse para aumentar ou diminuir o texto selecionado.</div>
+
 
     <label for="fontSelect">Fonte</label>
     <select id="fontSelect">
@@ -261,6 +309,8 @@
     <input type="range" id="curveSpreadInput" min="40" max="220" value="100" step="1" />
     <div class="hint">Menor = mais fechada | Maior = mais aberta</div>
 
+    <div class="text-list" id="textList"></div>
+
     <div class="group-title">Ícones Pretos</div>
 
     <label for="iconUpload">Upload de ícones</label>
@@ -279,10 +329,10 @@
 
     <div class="icon-list" id="iconList"></div>
 
-    <div class="group-title">Exportação</div>
+    <div class="group-title">Baixar</div>
     <div class="toolbar">
-      <button type="button" id="savePngBtn">Salvar PNG</button>
-      <button type="button" id="saveSvgBtn">Salvar SVG</button>
+      <button type="button" id="savePngBtn">Baixar PNG</button>
+      <button type="button" id="saveSvgBtn">Baixar SVG</button>
     </div>
   </div>
 
@@ -300,8 +350,13 @@
 
     const canvas = document.getElementById('designCanvas');
     const ctx = canvas.getContext('2d');
+    const iconList = document.getElementById('iconList');
+    const textList = document.getElementById('textList');
     let icons = [];
+    let texts = [];
     let dragging = null;
+    let selectedTextId = null;
+    let nextTextId = 1;
     canvas.dataset.textX = String(BASE_WIDTH / 2);
     canvas.dataset.textY = String(BASE_HEIGHT / 2);
 
@@ -322,7 +377,7 @@
       }
     }
 
-    function getTextState() {
+    function getControlState() {
       return {
         text: document.getElementById('textInput').value || '',
         font: document.getElementById('fontSelect').value,
@@ -333,7 +388,18 @@
         outlineMM: parseFloat(document.getElementById('outlineInput').value),
         curve: parseFloat(document.getElementById('curveInput').value),
         curveDir: document.getElementById('curveDirection').value,
-        curveSpread: parseFloat(document.getElementById('curveSpreadInput').value) / 100,
+        curveSpread: parseFloat(document.getElementById('curveSpreadInput').value) / 100
+      };
+    }
+
+    function getTextState() {
+      const selected = getSelectedText();
+      const base = getControlState();
+      if (selected) {
+        return { ...selected };
+      }
+      return {
+        ...base,
         centerX: parseFloat(canvas.dataset.textX),
         centerY: parseFloat(canvas.dataset.textY)
       };
@@ -351,7 +417,7 @@
         const charWidth = charWidths[i];
         const centerOriginal = cursor + charWidth / 2;
         cursor += charWidth;
-        const u = totalScaledWidth === 0 ? 0 : ((centerOriginal / totalScaledWidth) - 0.5); // -0.5..0.5
+        const u = totalScaledWidth === 0 ? 0 : ((centerOriginal / totalScaledWidth) - 0.5);
         const x = u * span;
         const y = dir * curvePx * (1 - 4 * u * u);
         const slope = dir * (-8 * curvePx * u) / span;
@@ -360,48 +426,100 @@
       });
     }
 
-    function computeTextBounds(state) {
+    function computeTextBounds(state, measureCtx = ctx) {
       const sizePx = mmToPx(state.sizeMM);
       const curvePx = mmToPx(state.curve);
-      ctx.save();
-      ctx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
+      measureCtx.save();
+      measureCtx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
       let minX = Infinity;
       let minY = Infinity;
       let maxX = -Infinity;
       let maxY = -Infinity;
 
-      const metricsSample = ctx.measureText('Mg');
-      const ascent = (metricsSample.actualBoundingBoxAscent || sizePx * 0.75) * state.heightScale;
-      const descent = (metricsSample.actualBoundingBoxDescent || sizePx * 0.25) * state.heightScale;
-
       if (state.text) {
         if (curvePx > 0 && state.curveDir !== 'none') {
-          const glyphs = buildCurvedGlyphs(state.text, ctx, state.widthScale, state.heightScale, curvePx, state.curveDir, state.curveSpread);
+          const glyphs = buildCurvedGlyphs(state.text, measureCtx, state.widthScale, state.heightScale, curvePx, state.curveDir, state.curveSpread);
           glyphs.forEach(g => {
-            minX = Math.min(minX, g.x - g.width / 2);
-            maxX = Math.max(maxX, g.x + g.width / 2);
+            const m = measureCtx.measureText(g.char);
+            const left = (m.actualBoundingBoxLeft || g.width / 2) * state.widthScale;
+            const right = (m.actualBoundingBoxRight || g.width / 2) * state.widthScale;
+            const ascent = (m.actualBoundingBoxAscent || sizePx * 0.75) * state.heightScale;
+            const descent = (m.actualBoundingBoxDescent || sizePx * 0.25) * state.heightScale;
+            minX = Math.min(minX, g.x - left);
+            maxX = Math.max(maxX, g.x + right);
             minY = Math.min(minY, g.y - ascent);
             maxY = Math.max(maxY, g.y + descent);
           });
         } else {
-          const widthPx = ctx.measureText(state.text).width * state.widthScale;
-          minX = -widthPx / 2;
-          maxX = widthPx / 2;
-          minY = -ascent;
-          maxY = descent;
+          const m = measureCtx.measureText(state.text);
+          minX = -(m.actualBoundingBoxLeft || (m.width / 2)) * state.widthScale;
+          maxX = (m.actualBoundingBoxRight || (m.width / 2)) * state.widthScale;
+          minY = -(m.actualBoundingBoxAscent || sizePx * 0.75) * state.heightScale;
+          maxY = (m.actualBoundingBoxDescent || sizePx * 0.25) * state.heightScale;
         }
       } else {
         minX = maxX = minY = maxY = 0;
       }
 
-      ctx.restore();
+      if (!isFinite(minX)) minX = 0;
+      if (!isFinite(minY)) minY = 0;
+      if (!isFinite(maxX)) maxX = 0;
+      if (!isFinite(maxY)) maxY = 0;
+
+      measureCtx.restore();
       return {
+        minX, minY, maxX, maxY,
         widthMm: pxToMm(Math.max(0, maxX - minX)),
         heightMm: pxToMm(Math.max(0, maxY - minY))
       };
     }
 
-    function renderText(targetCtx, state) {
+    function computeSelectionBounds(state) {
+      const off = document.createElement('canvas');
+      off.width = BASE_WIDTH;
+      off.height = BASE_HEIGHT;
+      const offCtx = off.getContext('2d', { willReadFrequently: true });
+      offCtx.clearRect(0, 0, off.width, off.height);
+
+      renderText(offCtx, {
+        ...state,
+        centerX: off.width / 2,
+        centerY: off.height / 2,
+        angleDeg: 0
+      }, false);
+
+      const img = offCtx.getImageData(0, 0, off.width, off.height).data;
+      let minX = off.width, minY = off.height, maxX = -1, maxY = -1;
+
+      for (let y = 0; y < off.height; y++) {
+        for (let x = 0; x < off.width; x++) {
+          const a = img[(y * off.width + x) * 4 + 3];
+          if (a > 0) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      if (maxX === -1 || maxY === -1) {
+        return computeTextBounds(state);
+      }
+
+      const cx = off.width / 2;
+      const cy = off.height / 2;
+      return {
+        minX: minX - cx,
+        minY: minY - cy,
+        maxX: maxX - cx,
+        maxY: maxY - cy,
+        widthMm: pxToMm(Math.max(0, maxX - minX)),
+        heightMm: pxToMm(Math.max(0, maxY - minY))
+      };
+    }
+
+    function renderText(targetCtx, state, isSelected = false) {
       if (!state.text) return;
       const sizePx = mmToPx(state.sizeMM);
       const curvePx = mmToPx(state.curve);
@@ -437,6 +555,25 @@
       }
 
       targetCtx.restore();
+
+      if (isSelected) {
+        const b = computeSelectionBounds(state);
+        const x = b.minX;
+        const y = b.minY;
+        const w = Math.max(1, b.maxX - b.minX);
+        const h = Math.max(1, b.maxY - b.minY);
+
+        targetCtx.save();
+        targetCtx.translate(state.centerX, state.centerY);
+        targetCtx.rotate((state.angleDeg * Math.PI) / 180);
+        targetCtx.strokeStyle = '#2563eb';
+        targetCtx.lineWidth = 1.2;
+        targetCtx.setLineDash([6, 3]);
+        targetCtx.strokeRect(x, y, w, h);
+        targetCtx.setLineDash([]);
+        targetCtx.restore();
+      }
+
     }
 
     function renderIcons(targetCtx) {
@@ -459,13 +596,129 @@
       });
     }
 
-    function renderScene(targetCtx) {
-      const state = getTextState();
+    function renderScene(targetCtx, showSelection = false) {
       targetCtx.imageSmoothingEnabled = true;
       targetCtx.imageSmoothingQuality = 'high';
       targetCtx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-      renderText(targetCtx, state);
+      texts.forEach(t => renderText(targetCtx, t, showSelection && t.id === selectedTextId));
+
+      const selected = getSelectedText();
+      const draft = getControlState();
+      const hasDraft = draft.text && !selected;
+      if (hasDraft) {
+        renderText(targetCtx, {
+          ...draft,
+          centerX: BASE_WIDTH / 2,
+          centerY: BASE_HEIGHT / 2
+        }, false);
+      }
+
       renderIcons(targetCtx);
+    }
+
+    function getSelectedText() {
+      return texts.find(t => t.id === selectedTextId) || null;
+    }
+
+    function applyTextToControls(textObj) {
+      if (!textObj) return;
+      document.getElementById('fontSelect').value = textObj.font;
+      document.getElementById('sizeInput').value = textObj.sizeMM;
+      document.getElementById('angleInput').value = textObj.angleDeg;
+      document.getElementById('heightInput').value = Math.round(textObj.heightScale * 100);
+      document.getElementById('widthInput').value = Math.round(textObj.widthScale * 100);
+      document.getElementById('outlineInput').value = textObj.outlineMM;
+      document.getElementById('curveInput').value = textObj.curve;
+      document.getElementById('curveDirection').value = textObj.curveDir;
+      document.getElementById('curveSpreadInput').value = Math.round(textObj.curveSpread * 100);
+    }
+
+    function createTextFromControls(x = BASE_WIDTH / 2, y = BASE_HEIGHT / 2) {
+      const s = getControlState();
+      return {
+        id: nextTextId++,
+        centerX: x,
+        centerY: y,
+        ...s
+      };
+    }
+
+    function getNextTextPosition() {
+      const draft = createTextFromControls(0, 0);
+      const bounds = computeTextBounds(draft);
+      const textHeightPx = Math.max(40, mmToPx(bounds.heightMm + 6));
+      const textWidthPx = Math.max(120, mmToPx(bounds.widthMm + 12));
+
+      const topY = 80;
+      const bottomY = BASE_HEIGHT - 80;
+      const stepY = textHeightPx;
+      const rowsPerColumn = Math.max(1, Math.floor((bottomY - topY) / stepY) + 1);
+
+      const index = texts.length;
+      const column = Math.floor(index / rowsPerColumn);
+      const row = index % rowsPerColumn;
+
+      const columnStep = Math.max(160, textWidthPx + 30);
+      const columnOffset = column === 0
+        ? 0
+        : (column % 2 === 1
+            ? -Math.ceil(column / 2) * columnStep
+            : Math.ceil(column / 2) * columnStep);
+
+      const desiredX = BASE_WIDTH / 2 + columnOffset;
+      const marginX = Math.min(BASE_WIDTH / 2 - 30, textWidthPx / 2 + 20);
+      const clampedX = Math.max(marginX, Math.min(BASE_WIDTH - marginX, desiredX));
+
+      let desiredY = topY + row * stepY;
+      const marginY = Math.min(BASE_HEIGHT / 2 - 30, textHeightPx / 2 + 20);
+      desiredY = Math.max(marginY, Math.min(BASE_HEIGHT - marginY, desiredY));
+
+      return {
+        x: clampedX,
+        y: desiredY
+      };
+    }
+
+    function selectText(id) {
+      selectedTextId = id;
+      const selected = getSelectedText();
+      applyTextToControls(selected);
+      drawCanvas();
+    }
+
+    function rebuildTextList() {
+      textList.innerHTML = '';
+      texts.forEach((t, index) => {
+        const wrapper = document.createElement('div');
+        if (t.id === selectedTextId) wrapper.classList.add('selected-layer');
+        wrapper.innerHTML = `
+          <div style="font-weight:700; margin-bottom:6px;">${t.text || `Texto ${index + 1}`}</div>
+          <div class="text-actions">
+            <button type="button" data-select="${t.id}" style="background:#2563eb;">Selecionar</button>
+            <button type="button" data-duplicate="${t.id}" style="background:#7c3aed;">Duplicar</button>
+          </div>
+          <button type="button" data-delete="${t.id}" style="background:#e74c3c;">Excluir</button>
+        `;
+        textList.appendChild(wrapper);
+      });
+
+      textList.querySelectorAll('button[data-select]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          selectText(parseInt(e.target.dataset.select, 10));
+        });
+      });
+
+      textList.querySelectorAll('button[data-duplicate]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          duplicateText(parseInt(e.target.dataset.duplicate, 10));
+        });
+      });
+
+      textList.querySelectorAll('button[data-delete]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          deleteText(parseInt(e.target.dataset.delete, 10));
+        });
+      });
     }
 
     function rebuildIconControls() {
@@ -475,9 +728,9 @@
         const wrapper = document.createElement('div');
         wrapper.innerHTML = `
           <div style="font-size:18px; margin-bottom:6px;">${icon.char || '🖼️ Ícone'}</div>
-          <label style="font-size:0.88rem; margin-bottom:4px;">Tamanho</label>
+          <label style="font-size:0.88rem; margin-bottom:4px; color:#111;">Tamanho</label>
           <input type="range" min="10" max="200" value="${icon.size}" data-index="${index}">
-          <label style="font-size:0.88rem; margin-bottom:4px;">Rotação</label>
+          <label style="font-size:0.88rem; margin-bottom:4px; color:#111;">Rotação</label>
           <input type="range" min="-180" max="180" value="${icon.angle || 0}" data-rotate="${index}">
           <button type="button" data-remove="${index}">Remover</button>
         `;
@@ -509,25 +762,116 @@
       });
     }
 
+    async function loadAllFonts() {
+      const toLoad = [];
+      for (const t of texts) {
+        toLoad.push(loadFont(t.font, mmToPx(t.sizeMM)));
+      }
+      const selected = getSelectedText();
+      const controls = getControlState();
+      if (!selected && controls.text) {
+        toLoad.push(loadFont(controls.font, mmToPx(controls.sizeMM)));
+      }
+      await Promise.all(toLoad);
+    }
+
     async function drawCanvas() {
-      const state = getTextState();
-      const sizePx = mmToPx(state.sizeMM);
-      await loadFont(state.font, sizePx);
+      await loadAllFonts();
+      renderScene(ctx, true);
 
-      renderScene(ctx);
-
-      const bounds = computeTextBounds(state);
+      const selected = getSelectedText();
+      const draft = getControlState();
+      const measureState = selected ? selected : (draft.text ? {
+        ...draft,
+        centerX: BASE_WIDTH / 2,
+        centerY: BASE_HEIGHT / 2
+      } : null);
+      const bounds = measureState ? computeTextBounds(measureState) : { widthMm: 0, heightMm: 0 };
       document.getElementById('realSizeText').textContent =
         `Altura: ${bounds.heightMm.toFixed(1)} mm x Largura: ${bounds.widthMm.toFixed(1)} mm`;
 
+      rebuildTextList();
       rebuildIconControls();
     }
 
-    document.querySelectorAll('input, select').forEach(el => {
-      el.addEventListener('input', drawCanvas);
+    function addText() {
+      const input = document.getElementById('textInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const pos = getNextTextPosition();
+      const t = createTextFromControls(pos.x, pos.y);
+      texts.push(t);
+
+      input.value = '';
+      selectedTextId = null;
+      drawCanvas();
+    }
+
+    function duplicateText(id = selectedTextId) {
+      const original = texts.find(t => t.id === id);
+      if (!original) return;
+      const copy = { ...original, id: nextTextId++, centerX: original.centerX + 20, centerY: original.centerY + 20 };
+      texts.push(copy);
+      selectedTextId = copy.id;
+      drawCanvas();
+    }
+
+    function deleteText(id = selectedTextId) {
+      if (id == null) return;
+      texts = texts.filter(t => t.id !== id);
+      if (selectedTextId === id) {
+        selectedTextId = texts.length ? texts[texts.length - 1].id : null;
+        if (selectedTextId) applyTextToControls(getSelectedText());
+      }
+      drawCanvas();
+    }
+
+    function centerSelectedText() {
+      const selected = getSelectedText();
+      if (!selected) return;
+      selected.centerX = BASE_WIDTH / 2;
+      selected.centerY = BASE_HEIGHT / 2;
+      drawCanvas();
+    }
+
+    document.getElementById('addTextBtn').addEventListener('click', addText);
+    document.getElementById('deleteTextBtn').addEventListener('click', () => deleteText());
+    document.getElementById('centerTextBtn').addEventListener('click', centerSelectedText);
+
+    document.getElementById('textInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addText();
+      }
     });
 
-    document.getElementById('fontSelect').addEventListener('change', drawCanvas);
+    function syncControlsToSelected() {
+      const selected = getSelectedText();
+      if (!selected) return;
+      const s = getControlState();
+      selected.font = s.font;
+      selected.sizeMM = s.sizeMM;
+      selected.angleDeg = s.angleDeg;
+      selected.heightScale = s.heightScale;
+      selected.widthScale = s.widthScale;
+      selected.outlineMM = s.outlineMM;
+      selected.curve = s.curve;
+      selected.curveDir = s.curveDir;
+      selected.curveSpread = s.curveSpread;
+    }
+
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', () => {
+        syncControlsToSelected();
+        drawCanvas();
+      });
+    });
+
+    document.getElementById('fontSelect').addEventListener('change', () => {
+      syncControlsToSelected();
+      drawCanvas();
+    });
 
     document.getElementById('prebuiltIcons').addEventListener('change', e => {
       if (!e.target.value) return;
@@ -598,6 +942,17 @@
       };
     }
 
+    function getTouchDistance(t1, t2) {
+      return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    }
+
+    function getTouchMidpoint(t1, t2) {
+      return {
+        x: (t1.clientX + t2.clientX) / 2,
+        y: (t1.clientY + t2.clientY) / 2
+      };
+    }
+
     function pickIcon(x, y) {
       for (const icon of icons) {
         const size = icon.size || 32;
@@ -611,19 +966,57 @@
       return null;
     }
 
+    function pickText(x, y) {
+      for (let i = texts.length - 1; i >= 0; i--) {
+        const t = texts[i];
+        const localDx = x - t.centerX;
+        const localDy = y - t.centerY;
+        const rad = -t.angleDeg * Math.PI / 180;
+        const lx = localDx * Math.cos(rad) - localDy * Math.sin(rad);
+        const ly = localDx * Math.sin(rad) + localDy * Math.cos(rad);
+        const b = computeTextBounds(t);
+        if (lx >= b.minX - 8 && lx <= b.maxX + 8 && ly >= b.minY - 8 && ly <= b.maxY + 8) {
+          return t;
+        }
+      }
+      return null;
+    }
+
     canvas.addEventListener('mousedown', e => {
       const p = getCanvasCoords(e.clientX, e.clientY);
       const icon = pickIcon(p.x, p.y);
       if (icon) {
-        dragging = { icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
+        dragging = { type: 'icon', icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
+        return;
+      }
+
+      const text = pickText(p.x, p.y);
+      if (text) {
+        selectedTextId = text.id;
+        const idx = texts.findIndex(t => t.id === text.id);
+        if (idx > -1) {
+          const selected = texts.splice(idx, 1)[0];
+          texts.push(selected);
+        }
+        applyTextToControls(text);
+        dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
+        drawCanvas();
+      } else {
+        selectedTextId = null;
+        drawCanvas();
       }
     });
 
     canvas.addEventListener('mousemove', e => {
       if (!dragging) return;
       const p = getCanvasCoords(e.clientX, e.clientY);
-      dragging.icon.x = p.x - dragging.offsetX;
-      dragging.icon.y = p.y - dragging.offsetY;
+      if (dragging.type === 'icon') {
+        dragging.icon.x = p.x - dragging.offsetX;
+        dragging.icon.y = p.y - dragging.offsetY;
+      } else if (dragging.type === 'text') {
+        dragging.text.centerX = p.x - dragging.offsetX;
+        dragging.text.centerY = p.y - dragging.offsetY;
+      }
       drawCanvas();
     });
 
@@ -636,20 +1029,103 @@
     });
 
     canvas.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
+        const p = getCanvasCoords(midpoint.x, midpoint.y);
+        const icon = pickIcon(p.x, p.y);
+        if (icon) {
+          dragging = {
+            type: 'iconPinch',
+            icon,
+            startDistance: getTouchDistance(e.touches[0], e.touches[1]),
+            startSize: icon.size,
+            midpointOffsetX: p.x - (icon.x + icon.size / 2),
+            midpointOffsetY: p.y - (icon.y + icon.size / 2)
+          };
+          return;
+        }
+        const text = pickText(p.x, p.y) || getSelectedText();
+        if (text) {
+          selectedTextId = text.id;
+          applyTextToControls(text);
+          dragging = {
+            type: 'textPinch',
+            text,
+            startDistance: getTouchDistance(e.touches[0], e.touches[1]),
+            startSizeMM: text.sizeMM,
+            midpointOffsetX: p.x - text.centerX,
+            midpointOffsetY: p.y - text.centerY
+          };
+          drawCanvas();
+          return;
+        }
+      }
+
       const touch = e.touches[0];
       const p = getCanvasCoords(touch.clientX, touch.clientY);
       const icon = pickIcon(p.x, p.y);
       if (icon) {
-        dragging = { icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
+        dragging = { type: 'icon', icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
+        return;
+      }
+      const text = pickText(p.x, p.y);
+      if (text) {
+        selectedTextId = text.id;
+        const idx = texts.findIndex(t => t.id === text.id);
+        if (idx > -1) {
+          const selected = texts.splice(idx, 1)[0];
+          texts.push(selected);
+        }
+        applyTextToControls(text);
+        dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
+        drawCanvas();
+      } else {
+        selectedTextId = null;
+        drawCanvas();
       }
     }, { passive: true });
 
     canvas.addEventListener('touchmove', e => {
       if (!dragging) return;
+
+      if (dragging.type === 'iconPinch' && e.touches.length === 2) {
+        const distance = getTouchDistance(e.touches[0], e.touches[1]);
+        const ratio = distance / Math.max(1, dragging.startDistance);
+        dragging.icon.size = Math.max(10, Math.min(200, Math.round(dragging.startSize * ratio)));
+
+        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
+        const p = getCanvasCoords(midpoint.x, midpoint.y);
+        dragging.icon.x = p.x - dragging.midpointOffsetX - dragging.icon.size / 2;
+        dragging.icon.y = p.y - dragging.midpointOffsetY - dragging.icon.size / 2;
+        drawCanvas();
+        e.preventDefault();
+        return;
+      }
+
+      if (dragging.type === 'textPinch' && e.touches.length === 2) {
+        const distance = getTouchDistance(e.touches[0], e.touches[1]);
+        const ratio = distance / Math.max(1, dragging.startDistance);
+        dragging.text.sizeMM = Math.max(5, Math.min(150, dragging.startSizeMM * ratio));
+
+        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
+        const p = getCanvasCoords(midpoint.x, midpoint.y);
+        dragging.text.centerX = p.x - dragging.midpointOffsetX;
+        dragging.text.centerY = p.y - dragging.midpointOffsetY;
+        applyTextToControls(dragging.text);
+        drawCanvas();
+        e.preventDefault();
+        return;
+      }
+
       const touch = e.touches[0];
       const p = getCanvasCoords(touch.clientX, touch.clientY);
-      dragging.icon.x = p.x - dragging.offsetX;
-      dragging.icon.y = p.y - dragging.offsetY;
+      if (dragging.type === 'icon') {
+        dragging.icon.x = p.x - dragging.offsetX;
+        dragging.icon.y = p.y - dragging.offsetY;
+      } else if (dragging.type === 'text') {
+        dragging.text.centerX = p.x - dragging.offsetX;
+        dragging.text.centerY = p.y - dragging.offsetY;
+      }
       drawCanvas();
       e.preventDefault();
     }, { passive: false });
@@ -659,10 +1135,7 @@
     });
 
     async function saveAsPNG() {
-      const state = getTextState();
-      const sizePx = mmToPx(state.sizeMM);
-      await loadFont(state.font, sizePx);
-
+      await loadAllFonts();
       const exportScale = 1.2;
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = Math.round(BASE_WIDTH * exportScale);
@@ -690,7 +1163,7 @@
         .replace(/>/g, '&gt;');
     }
 
-    function buildTextSvg(state) {
+    function buildSingleTextSvg(state) {
       if (!state.text) return '';
       const sizePx = mmToPx(state.sizeMM);
       const outlinePx = mmToPx(state.outlineMM);
@@ -715,6 +1188,10 @@
       return `<text ${baseAttrs}${strokeAttrs} transform="translate(${state.centerX} ${state.centerY})${rotate ? rotate : ''} scale(${state.widthScale} ${state.heightScale})">${escapeXml(state.text)}</text>`;
     }
 
+    function buildTextsSvg() {
+      return texts.map(t => buildSingleTextSvg(t)).join('\n');
+    }
+
     function buildIconsSvg() {
       return icons.map(icon => {
         const centerX = icon.x + icon.size / 2;
@@ -737,11 +1214,10 @@
     }
 
     function saveAsSVG() {
-      const state = getTextState();
       const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
         `<svg xmlns="http://www.w3.org/2000/svg" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">\n` +
         `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>\n` +
-        `  ${buildTextSvg(state)}\n` +
+        `  ${buildTextsSvg()}\n` +
         `  ${buildIconsSvg()}\n` +
         `</svg>`;
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
