@@ -220,7 +220,7 @@
     <h2>Simulador de Fontes Gravação Laser</h2>
 
     <label for="textInput">Texto</label>
-    <input type="text" id="textInput" placeholder="Digite o nome ou frase" />
+    <input type="text" id="textInput" autocomplete="off" placeholder="Digite o nome ou frase" />
     <div class="toolbar-4 compact-text-tools">
       <button type="button" id="addTextBtn">Adicionar</button>
       <button type="button" id="centerTextBtn">Centralizar</button>
@@ -329,7 +329,7 @@
 
     <div class="icon-list" id="iconList"></div>
 
-    <div class="group-title">Baixa</div>
+    <div class="group-title">Baixar</div>
     <div class="toolbar">
       <button type="button" id="savePngBtn">Baixar PNG</button>
       <button type="button" id="saveSvgBtn">Baixar SVG</button>
@@ -1232,6 +1232,36 @@
     document.getElementById('savePngBtn').addEventListener('click', saveAsPNG);
     document.getElementById('saveSvgBtn').addEventListener('click', saveAsSVG);
 
+    const DEFAULT_CONTROL_VALUES = {
+      textInput: '',
+      fontSelect: 'Dancing Script',
+      sizeInput: '10',
+      angleInput: '0',
+      heightInput: '100',
+      widthInput: '100',
+      outlineInput: '0',
+      curveDirection: 'none',
+      curveInput: '0',
+      curveSpreadInput: '100',
+      prebuiltIcons: ''
+    };
+
+    function resetControlsToDefaults() {
+      Object.entries(DEFAULT_CONTROL_VALUES).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = value;
+      });
+      selectedTextId = null;
+    }
+
+    window.addEventListener('pageshow', () => {
+      resetControlsToDefaults();
+      drawCanvas();
+    });
+
+
+    resetControlsToDefaults();
     drawCanvas();
   </script>
 </body>
