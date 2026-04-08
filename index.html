@@ -362,27 +362,102 @@
     let history = [];
     let redoStack = [];
     let suppressSync = false;
+    let draftReadyToAdd = false;
 
     function mmToPx(mm) { return mm * PX_PER_MM; }
     function pxToMm(px) { return px * MM_PER_PX; }
 
+    function serializeIcons() {
+      return icons.map(icon => ({
+        id: icon.id,
+        char: icon.char || null,
+        x: icon.x,
+        y: icon.y,
+        size: icon.size,
+        angle: icon.angle || 0,
+        loaded: !!icon.loaded,
+        originalSvg: icon.originalSvg || null,
+        srcData: icon.srcData || null,
+        naturalWidth: icon.naturalWidth || null,
+        naturalHeight: icon.naturalHeight || null
+      }));
+    }
+
     function cloneState() {
       return JSON.stringify({
         texts,
-        icons,
+        icons: serializeIcons(),
         selectedItem,
         nextTextId,
         nextIconId
       });
     }
 
-    function restoreState(serialized) {
+    async function restoreState(serialized) {
       const data = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
       texts = data.texts || [];
-      icons = data.icons || [];
+      icons = [];
       selectedItem = data.selectedItem || null;
       nextTextId = data.nextTextId || 1;
       nextIconId = data.nextIconId || 1;
+
+      const restoredIcons = data.icons || [];
+      for (const icon of restoredIcons) {
+        if (icon.char && !icon.loaded && !icon.srcData && !icon.originalSvg) {
+          icons.push({ ...icon });
+          continue;
+        }
+
+        if (icon.originalSvg) {
+          const blob = new Blob([icon.originalSvg], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          await new Promise(resolve => {
+            img.onload = () => {
+              icons.push({
+                ...icon,
+                img,
+                loaded: true,
+                naturalWidth: img.naturalWidth || icon.naturalWidth || icon.size,
+                naturalHeight: img.naturalHeight || icon.naturalHeight || icon.size
+              });
+              URL.revokeObjectURL(url);
+              resolve();
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              icons.push({ ...icon });
+              resolve();
+            };
+            img.src = url;
+          });
+          continue;
+        }
+
+        if (icon.srcData) {
+          const img = new Image();
+          await new Promise(resolve => {
+            img.onload = () => {
+              icons.push({
+                ...icon,
+                img,
+                loaded: true,
+                naturalWidth: img.naturalWidth || icon.naturalWidth || icon.size,
+                naturalHeight: img.naturalHeight || icon.naturalHeight || icon.size
+              });
+              resolve();
+            };
+            img.onerror = () => {
+              icons.push({ ...icon });
+              resolve();
+            };
+            img.src = icon.srcData;
+          });
+          continue;
+        }
+
+        icons.push({ ...icon });
+      }
     }
 
     function pushHistory() {
@@ -454,6 +529,17 @@
       return icons.find(i => i.id === selectedItem.id) || null;
     }
 
+    function getIconDimensions(icon) {
+      const nw = icon.naturalWidth || (icon.img && (icon.img.naturalWidth || icon.img.width)) || icon.size;
+      const nh = icon.naturalHeight || (icon.img && (icon.img.naturalHeight || icon.img.height)) || icon.size;
+      if (!nw || !nh) return { width: icon.size, height: icon.size };
+      const ratio = nw / nh;
+      if (ratio >= 1) {
+        return { width: icon.size, height: icon.size / ratio };
+      }
+      return { width: icon.size * ratio, height: icon.size };
+    }
+
     function updateSelectedInfo() {
       const selected = getSelectedText();
       const info = document.getElementById('selectedInfo');
@@ -483,6 +569,7 @@
       document.getElementById('curveDirection').value = textObj.curveDir;
       document.getElementById('curveSpreadInput').value = Math.round(textObj.curveSpread * 100);
       suppressSync = false;
+      draftReadyToAdd = false;
     }
 
     function applySelectionToControls() {
@@ -651,15 +738,16 @@
 
     function renderIcons(targetCtx, showSelection = false) {
       icons.forEach(icon => {
-        const cx = icon.x + icon.size / 2;
-        const cy = icon.y + icon.size / 2;
+        const dims = getIconDimensions(icon);
+        const cx = icon.x + dims.width / 2;
+        const cy = icon.y + dims.height / 2;
         targetCtx.save();
         targetCtx.translate(cx, cy);
         targetCtx.rotate((icon.angle || 0) * Math.PI / 180);
         if (icon.loaded && icon.img) {
           targetCtx.imageSmoothingEnabled = true;
           targetCtx.imageSmoothingQuality = 'high';
-          targetCtx.drawImage(icon.img, -icon.size / 2, -icon.size / 2, icon.size, icon.size);
+          targetCtx.drawImage(icon.img, -dims.width / 2, -dims.height / 2, dims.width, dims.height);
         } else if (icon.char) {
           targetCtx.font = `${icon.size}px sans-serif`;
           targetCtx.fillStyle = '#000';
@@ -676,7 +764,7 @@
           targetCtx.strokeStyle = '#2563eb';
           targetCtx.lineWidth = 1.2;
           targetCtx.setLineDash([6, 3]);
-          targetCtx.strokeRect(-icon.size / 2, -icon.size / 2, icon.size, icon.size);
+          targetCtx.strokeRect(-dims.width / 2, -dims.height / 2, dims.width, dims.height);
           targetCtx.setLineDash([]);
           targetCtx.restore();
         }
@@ -743,6 +831,7 @@
       selectedItem = { type: 'text', id: t.id };
       applyTextToControls(t);
       input.value = '';
+      draftReadyToAdd = false;
       drawCanvas();
     }
 
@@ -780,8 +869,9 @@
       }
       const icon = getSelectedIcon();
       if (icon) {
-        icon.x = BASE_WIDTH / 2 - icon.size / 2;
-        icon.y = BASE_HEIGHT / 2 - icon.size / 2;
+        const dims = getIconDimensions(icon);
+        icon.x = BASE_WIDTH / 2 - dims.width / 2;
+        icon.y = BASE_HEIGHT / 2 - dims.height / 2;
       }
       drawCanvas();
     }
@@ -791,7 +881,9 @@
       const selected = getSelectedText();
       if (!selected) return;
       const s = getControlState();
-      selected.text = s.text;
+      if (document.activeElement === document.getElementById('textInput')) {
+        selected.text = s.text;
+      }
       selected.font = s.font;
       selected.sizeMM = s.sizeMM;
       selected.angleDeg = s.angleDeg;
@@ -872,15 +964,25 @@
     }
 
     function saveProject() {
-      localStorage.setItem(PROJECT_KEY, cloneState());
+      try {
+        localStorage.setItem(PROJECT_KEY, cloneState());
+        document.getElementById('selectedInfo').textContent = 'Projeto salvo neste aparelho';
+      } catch (e) {
+        console.warn('Falha ao salvar projeto', e);
+        document.getElementById('selectedInfo').textContent = 'Falha ao salvar projeto';
+      }
     }
 
-    function loadProject() {
+    async function loadProject() {
       const raw = localStorage.getItem(PROJECT_KEY);
-      if (!raw) return;
-      restoreState(raw);
+      if (!raw) {
+        document.getElementById('selectedInfo').textContent = 'Nenhum projeto salvo';
+        return;
+      }
+      await restoreState(raw);
       applySelectionToControls();
       drawCanvas();
+      document.getElementById('selectedInfo').textContent = 'Projeto carregado';
     }
 
     function clearAll() {
@@ -926,10 +1028,11 @@
     function pickIcon(x, y) {
       for (let i = icons.length - 1; i >= 0; i--) {
         const icon = icons[i];
-        const cx = icon.x + icon.size / 2;
-        const cy = icon.y + icon.size / 2;
+        const dims = getIconDimensions(icon);
+        const cx = icon.x + dims.width / 2;
+        const cy = icon.y + dims.height / 2;
         const p = rotatePoint(x, y, cx, cy, icon.angle || 0);
-        if (p.x >= -icon.size / 2 && p.x <= icon.size / 2 && p.y >= -icon.size / 2 && p.y <= icon.size / 2) return icon;
+        if (p.x >= -dims.width / 2 && p.x <= dims.width / 2 && p.y >= -dims.height / 2 && p.y <= dims.height / 2) return icon;
       }
       return null;
     }
@@ -963,11 +1066,17 @@
     });
 
     document.querySelectorAll('input, select').forEach(el => {
-      if (el.id === 'iconUpload' || el.id === 'prebuiltIcons') return;
+      if (el.id === 'iconUpload' || el.id === 'prebuiltIcons' || el.id === 'textInput') return;
       el.addEventListener('input', () => {
         syncSelectedFromControls();
         drawCanvas();
       });
+    });
+
+    document.getElementById('textInput').addEventListener('input', () => {
+      draftReadyToAdd = document.getElementById('textInput').value.trim().length > 0;
+      syncSelectedFromControls();
+      drawCanvas();
     });
 
     document.getElementById('prebuiltIcons').addEventListener('change', e => {
@@ -994,7 +1103,10 @@
               icons.push({
                 id: nextIconId++,
                 img, loaded: true, x: 100, y: 100, size: 40, angle: 0,
-                originalSvg: svgText
+                originalSvg: svgText,
+                srcData: url,
+                naturalWidth: img.naturalWidth || 40,
+                naturalHeight: img.naturalHeight || 40
               });
               selectedItem = { type: 'icon', id: nextIconId - 1 };
               drawCanvas();
@@ -1008,7 +1120,11 @@
           const url = URL.createObjectURL(file);
           img.onload = () => {
             pushHistory();
-            icons.push({ id: nextIconId++, img, loaded: true, x: 100, y: 100, size: 40, angle: 0 });
+            const off = document.createElement('canvas');
+            off.width = img.naturalWidth || img.width || 40;
+            off.height = img.naturalHeight || img.height || 40;
+            off.getContext('2d').drawImage(img, 0, 0);
+            icons.push({ id: nextIconId++, img, loaded: true, x: 100, y: 100, size: 40, angle: 0, srcData: off.toDataURL('image/png'), naturalWidth: off.width, naturalHeight: off.height });
             selectedItem = { type: 'icon', id: nextIconId - 1 };
             drawCanvas();
             URL.revokeObjectURL(url);
@@ -1038,10 +1154,11 @@
         drawCanvas();
       } else {
         const draftVal = document.getElementById('textInput').value.trim();
-        if (draftVal) {
+        if (draftReadyToAdd && draftVal) {
           addText(p.x, p.y);
         } else {
           selectedItem = null;
+          draftReadyToAdd = false;
           updateSelectedInfo();
           drawCanvas();
         }
@@ -1124,10 +1241,11 @@
         drawCanvas();
       } else {
         const draftVal = document.getElementById('textInput').value.trim();
-        if (draftVal) {
+        if (draftReadyToAdd && draftVal) {
           addText(p.x, p.y);
         } else {
           selectedItem = null;
+          draftReadyToAdd = false;
           drawCanvas();
         }
       }
@@ -1234,15 +1352,18 @@
 
     function buildIconsSvg() {
       return icons.map(icon => {
-        const centerX = icon.x + icon.size / 2;
-        const centerY = icon.y + icon.size / 2;
+        const dims = getIconDimensions(icon);
+        const centerX = icon.x + dims.width / 2;
+        const centerY = icon.y + dims.height / 2;
         if (icon.originalSvg) {
           const inner = icon.originalSvg
             .replace(/<\?xml[\s\S]*?\?>/g, '')
             .replace(/<!DOCTYPE[\s\S]*?>/g, '')
             .replace(/<svg[^>]*>/i, '')
             .replace(/<\/svg>/i, '');
-          return `<g transform="translate(${centerX} ${centerY}) rotate(${icon.angle || 0}) translate(${-icon.size / 2} ${-icon.size / 2}) scale(${icon.size / 100} ${icon.size / 100})">${inner}</g>`;
+          const base = Math.max(icon.naturalWidth || dims.width, icon.naturalHeight || dims.height, 1);
+          const scale = Math.max(dims.width, dims.height) / base;
+          return `<g transform="translate(${centerX} ${centerY}) rotate(${icon.angle || 0}) translate(${-dims.width / 2} ${-dims.height / 2}) scale(${scale} ${scale})">${inner}</g>`;
         }
         if (icon.loaded && icon.img) {
           const offscreen = document.createElement('canvas');
@@ -1251,7 +1372,7 @@
           const offctx = offscreen.getContext('2d');
           offctx.drawImage(icon.img, 0, 0);
           const href = offscreen.toDataURL('image/png');
-          return `<image x="${icon.x}" y="${icon.y}" width="${icon.size}" height="${icon.size}" href="${href}" transform="${icon.angle ? `rotate(${icon.angle} ${centerX} ${centerY})` : ''}" />`;
+          return `<image x="${icon.x}" y="${icon.y}" width="${dims.width}" height="${dims.height}" href="${href}" transform="${icon.angle ? `rotate(${icon.angle} ${centerX} ${centerY})` : ''}" />`;
         }
         return `<text x="${centerX}" y="${centerY}" font-family="sans-serif" font-size="${icon.size}" fill="#000" text-anchor="middle" dominant-baseline="middle" transform="${icon.angle ? `rotate(${icon.angle} ${centerX} ${centerY})` : ''}">${escapeXml(icon.char)}</text>`;
       }).join('');
