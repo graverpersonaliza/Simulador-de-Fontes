@@ -1258,17 +1258,11 @@
     }
 
     function saveAsSVG() {
-      const svg = `<?xml version="1.0" encoding="UTF-8"?>
-` +
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">
-` +
-        `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>
-` +
-        `  ${texts.map(buildTextSvg).join('
-')}
-` +
-        `  ${buildIconsSvg()}
-` +
+      const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">\n` +
+        `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>\n` +
+        `  ${texts.map(buildTextSvg).join('\n')}\n` +
+        `  ${buildIconsSvg()}\n` +
         `</svg>`;
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
       const link = document.createElement('a');
