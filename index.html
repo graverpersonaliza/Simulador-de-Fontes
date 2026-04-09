@@ -14,7 +14,7 @@
     @font-face { font-family: 'Bodoni Becker'; src: local('Bodoni Becker'); }
 
     :root {
-      --panel-width: 270px;
+      --panel-width: 282px;
       --canvas-display-width: 567px;
       --canvas-display-height: 378px;
       --base-width: 1000;
@@ -25,9 +25,17 @@
       --warning: #ea580c;
       --purple: #7c3aed;
       --muted: #6b7280;
+      --panel-bg: #f3f3f3;
+      --border: #dadada;
+      --selected: rgba(37, 99, 235, 0.14);
     }
 
     * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
 
     body {
       margin: 0;
@@ -42,7 +50,7 @@
     .controls {
       width: var(--panel-width);
       height: 100vh;
-      background: #f3f3f3;
+      background: var(--panel-bg);
       padding: 14px;
       overflow-y: auto;
       border-right: 1px solid #ddd;
@@ -92,7 +100,6 @@
     label[for="curveInput"] { color: #ca8a04; }
     label[for="curveSpreadInput"] { color: #0f766e; }
     label[for="iconUpload"] { color: #b45309; }
-    label[for="prebuiltIcons"] { color: #1d4ed8; }
 
     .hint {
       margin: -2px 0 12px;
@@ -106,7 +113,11 @@
       font-size: .84rem;
       color: var(--muted);
       font-weight: 700;
+      min-height: 1.1rem;
     }
+
+    .status-success { color: var(--success); }
+    .status-error { color: var(--danger); }
 
     input, select, button {
       width: 100%;
@@ -115,7 +126,18 @@
       font-size: .95rem;
     }
 
-    input[type="range"] { padding: 0; }
+    input[type="range"] {
+      padding: 0;
+      accent-color: var(--primary);
+      cursor: ew-resize;
+      touch-action: pan-y;
+    }
+
+    #sizeInput { accent-color: #ea580c; }
+    #angleInput, #heightInput, #widthInput { accent-color: #111; }
+    #outlineInput { accent-color: #9333ea; }
+    #curveInput { accent-color: #ca8a04; }
+    #curveSpreadInput { accent-color: #0f766e; }
 
     .preview canvas {
       display: block;
@@ -131,11 +153,13 @@
       cursor: grab;
     }
 
-    .preview canvas:active { cursor: grabbing; }
+    .preview canvas:active {
+      cursor: grabbing;
+    }
 
     .toolbar-4 {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
       margin-bottom: 8px;
     }
@@ -154,8 +178,8 @@
     }
 
     .compact button {
-      padding: 7px 4px;
-      font-size: 0.82rem;
+      padding: 6px 2px;
+      font-size: 0.76rem;
       line-height: 1.1;
       margin-bottom: 0;
       min-width: 0;
@@ -176,8 +200,9 @@
 
     #realSizeText { color: #111; font-weight: 700; }
 
+    .control-card,
     .icon-list > div {
-      border: 1px solid #dadada;
+      border: 1px solid var(--border);
       border-radius: 8px;
       background: #fff;
       padding: 8px;
@@ -188,7 +213,7 @@
       border: 0;
       color: #fff;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 6px;
       border-radius: 6px;
       padding: 7px 8px;
       background: var(--danger);
@@ -203,18 +228,83 @@
       padding: 4px 8px;
       border-radius: 999px;
       margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .selected-layer {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 2px var(--selected);
+    }
+
+    .icon-list input[type="range"] {
+      cursor: ew-resize;
+      touch-action: pan-y;
+      margin-bottom: 8px;
+    }
+
+    .icon-list input[data-size] { accent-color: #ea580c; }
+    .icon-list input[data-rotate] { accent-color: #111; }
+
+    .icon-palette {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    .icon-palette button {
+      width: 100%;
+      margin: 0;
+      padding: 8px 0;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      font-family: "Segoe UI Symbol","Noto Sans Symbols 2","Arial Unicode MS",sans-serif;
+    }
+
+    .icon-palette button:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+    }
+
+    .icon-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .icon-mini {
+      background: #111 !important;
+      color: #fff !important;
+      border: none;
+      margin-top: 0 !important;
+    }
+
+    .shortcut-note {
+      font-size: .78rem;
+      color: #444;
+      line-height: 1.35;
+      margin-top: 8px;
     }
 
     @media (max-width: 900px) {
       :root {
-        --panel-width: 220px;
+        --panel-width: 230px;
         --canvas-display-width: 520px;
         --canvas-display-height: 347px;
       }
+
       .controls { padding: 10px; }
       .preview { padding: 10px 10px 10px 4px; }
       input, select, button { font-size: 0.9rem; padding: 7px; }
       .compact button { font-size: 0.76rem; padding: 6px 3px; }
+      .icon-palette { grid-template-columns: repeat(4, 1fr); }
     }
   </style>
 </head>
@@ -230,8 +320,8 @@
       <button type="button" id="centerTextBtn">Centralizar</button>
       <button type="button" id="deleteTextBtn">Excluir</button>
     </div>
-    <div class="hint">Digite um nome ou frase. Toque em Adicionar ou clique numa área vazia do canvas para criar outro texto. Toque no texto para selecionar, mover e editar.</div>
-    <div id="selectedInfo" class="selected-chip">Nenhum texto selecionado</div>
+    <div class="hint">Digite um nome ou frase e use Adicionar ou Enter para criar. Toque no texto ou ícone para selecionar, mover, redimensionar pelos cantos e editar.</div>
+    <div id="selectedInfo" class="selected-chip">Nenhum item selecionado</div>
 
     <label for="fontSelect">Fonte</label>
     <select id="fontSelect">
@@ -293,10 +383,10 @@
     </select>
 
     <label for="curveInput">Intensidade da Curva</label>
-    <input type="range" id="curveInput" min="0" max="200" value="0" step="1" />
+    <input type="range" id="curveInput" min="0" max="120" value="0" step="1" />
 
     <label for="curveSpreadInput">Abertura da Curva</label>
-    <input type="range" id="curveSpreadInput" min="40" max="220" value="100" step="1" />
+    <input type="range" id="curveSpreadInput" min="70" max="150" value="100" step="1" />
     <div class="hint">Menor = mais fechada | Maior = mais aberta</div>
 
     <div class="group-title">Projeto</div>
@@ -309,30 +399,24 @@
       <button type="button" id="saveProjectBtn">Salvar Projeto</button>
       <button type="button" id="loadProjectBtn">Carregar</button>
     </div>
-    <div class="status">Projeto salvo no navegador deste aparelho.</div>
+    <div id="projectStatus" class="status">Autosave ativo neste aparelho.</div>
 
     <div class="group-title">Ícones Pretos</div>
 
     <label for="iconUpload">Upload de ícones</label>
     <input type="file" id="iconUpload" multiple accept="image/svg+xml,image/png" />
 
-    <label for="prebuiltIcons">Ícones prontos</label>
-    <select id="prebuiltIcons">
-      <option value="">Escolha um ícone</option>
-      <option value="♥">♥ Coração cheio</option>
-      <option value="♡">♡ Coração vazado</option>
-      <option value="★">★ Estrela</option>
-      <option value="●">● Círculo</option>
-      <option value="✿">✿ Flor</option>
-      <option value="☘︎">☘︎ Folha</option>
-    </select>
-
+    <div class="icon-palette" id="iconPalette"></div>
     <div class="icon-list" id="iconList"></div>
 
     <div class="group-title">Baixar</div>
     <div class="toolbar">
       <button type="button" id="savePngBtn">Imagem PNG</button>
       <button type="button" id="saveSvgBtn">Vetor SVG</button>
+    </div>
+
+    <div class="shortcut-note">
+      Atalhos: Ctrl/Cmd+S salvar, Ctrl/Cmd+Z desfazer, Ctrl/Cmd+Y refazer, Delete excluir, Ctrl/Cmd+D duplicar.
     </div>
   </div>
 
@@ -347,11 +431,17 @@
     const BASE_HEIGHT = 667;
     const PX_PER_MM = BASE_WIDTH / DESIGN_WIDTH_MM;
     const MM_PER_PX = DESIGN_WIDTH_MM / BASE_WIDTH;
-    const PROJECT_KEY = 'laser_editor_project_v100';
+    const PROJECT_KEY = 'laser_editor_project_v200';
+    const LEGACY_PROJECT_KEYS = ['laser_editor_project_v100', 'laser_fontes_project_auto_v2'];
+    const AUTO_SAVE_DELAY = 450;
+    const PRESET_ICONS = ['♥','♡','★','☆','●','○','■','□','◆','◇','✦','✧','✿','❀','❁','❋','❈','❖','❣','∞','☀','☾','♪','♫','⚓','✈','☕','☁','❄','⚘','❦','☘︎','♕','♛','✪','✺','✻','✽','✾'];
 
     const canvas = document.getElementById('designCanvas');
     const ctx = canvas.getContext('2d');
     const iconList = document.getElementById('iconList');
+    const iconPalette = document.getElementById('iconPalette');
+    const selectedInfo = document.getElementById('selectedInfo');
+    const projectStatus = document.getElementById('projectStatus');
 
     let texts = [];
     let icons = [];
@@ -363,9 +453,27 @@
     let redoStack = [];
     let suppressSync = false;
     let draftReadyToAdd = false;
+    let iconSliderEditing = false;
+    let saveTimer = null;
+    let liveEditSession = false;
+    let statusTimer = null;
 
     function mmToPx(mm) { return mm * PX_PER_MM; }
     function pxToMm(px) { return px * MM_PER_PX; }
+
+    function setProjectStatus(message, type = 'neutral', transient = false) {
+      projectStatus.textContent = message;
+      projectStatus.className = 'status';
+      if (type === 'success') projectStatus.classList.add('status-success');
+      if (type === 'error') projectStatus.classList.add('status-error');
+      if (statusTimer) clearTimeout(statusTimer);
+      if (transient) {
+        statusTimer = setTimeout(() => {
+          projectStatus.textContent = 'Autosave ativo neste aparelho.';
+          projectStatus.className = 'status';
+        }, 1800);
+      }
+    }
 
     function serializeIcons() {
       return icons.map(icon => ({
@@ -395,38 +503,52 @@
 
     async function restoreState(serialized) {
       const data = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
-      texts = data.texts || [];
+      texts = Array.isArray(data.texts) ? data.texts : [];
       icons = [];
       selectedItem = data.selectedItem || null;
       nextTextId = data.nextTextId || 1;
       nextIconId = data.nextIconId || 1;
 
-      const restoredIcons = data.icons || [];
+      const restoredIcons = Array.isArray(data.icons) ? data.icons : [];
       for (const icon of restoredIcons) {
-        if (icon.char && !icon.loaded && !icon.srcData && !icon.originalSvg) {
-          icons.push({ ...icon });
+        const baseIcon = {
+          id: icon.id || nextIconId++,
+          char: icon.char || null,
+          x: Number(icon.x) || 100,
+          y: Number(icon.y) || 100,
+          size: Number(icon.size) || 32,
+          angle: Number(icon.angle) || 0,
+          loaded: !!icon.loaded,
+          originalSvg: icon.originalSvg || null,
+          srcData: icon.srcData || null,
+          naturalWidth: icon.naturalWidth || null,
+          naturalHeight: icon.naturalHeight || null
+        };
+
+        if (baseIcon.char && !baseIcon.srcData && !baseIcon.originalSvg) {
+          icons.push(baseIcon);
           continue;
         }
 
-        if (icon.originalSvg) {
-          const blob = new Blob([icon.originalSvg], { type: 'image/svg+xml' });
+        if (baseIcon.originalSvg) {
+          const blob = new Blob([baseIcon.originalSvg], { type: 'image/svg+xml' });
           const url = URL.createObjectURL(blob);
           const img = new Image();
           await new Promise(resolve => {
             img.onload = () => {
               icons.push({
-                ...icon,
+                ...baseIcon,
                 img,
                 loaded: true,
-                naturalWidth: img.naturalWidth || icon.naturalWidth || icon.size,
-                naturalHeight: img.naturalHeight || icon.naturalHeight || icon.size
+                naturalWidth: img.naturalWidth || baseIcon.naturalWidth || baseIcon.size,
+                naturalHeight: img.naturalHeight || baseIcon.naturalHeight || baseIcon.size
               });
               URL.revokeObjectURL(url);
               resolve();
             };
             img.onerror = () => {
+              icons.push(baseIcon);
               URL.revokeObjectURL(url);
-              icons.push({ ...icon });
               resolve();
             };
             img.src = url;
@@ -434,55 +556,69 @@
           continue;
         }
 
-        if (icon.srcData) {
+        if (baseIcon.srcData) {
           const img = new Image();
           await new Promise(resolve => {
             img.onload = () => {
               icons.push({
-                ...icon,
+                ...baseIcon,
                 img,
                 loaded: true,
-                naturalWidth: img.naturalWidth || icon.naturalWidth || icon.size,
-                naturalHeight: img.naturalHeight || icon.naturalHeight || icon.size
+                naturalWidth: img.naturalWidth || baseIcon.naturalWidth || baseIcon.size,
+                naturalHeight: img.naturalHeight || baseIcon.naturalHeight || baseIcon.size
               });
               resolve();
             };
             img.onerror = () => {
-              icons.push({ ...icon });
+              icons.push(baseIcon);
               resolve();
             };
-            img.src = icon.srcData;
+            img.src = baseIcon.srcData;
           });
           continue;
         }
 
-        icons.push({ ...icon });
+        icons.push(baseIcon);
       }
     }
 
     function pushHistory() {
       history.push(cloneState());
-      if (history.length > 60) history.shift();
+      if (history.length > 80) history.shift();
       redoStack = [];
     }
 
-    function undo() {
+    function beginLiveEditSession() {
+      if (liveEditSession) return;
+      pushHistory();
+      liveEditSession = true;
+    }
+
+    function endLiveEditSession() {
+      if (!liveEditSession) return;
+      liveEditSession = false;
+      scheduleProjectSave();
+    }
+
+    async function undo() {
       if (!history.length) return;
       const current = cloneState();
       const prev = history.pop();
       redoStack.push(current);
-      restoreState(prev);
+      await restoreState(prev);
       applySelectionToControls();
-      drawCanvas();
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
-    function redo() {
+    async function redo() {
       if (!redoStack.length) return;
       history.push(cloneState());
       const next = redoStack.pop();
-      restoreState(next);
+      await restoreState(next);
       applySelectionToControls();
-      drawCanvas();
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
     async function loadFont(font, sizePx) {
@@ -534,25 +670,23 @@
       const nh = icon.naturalHeight || (icon.img && (icon.img.naturalHeight || icon.img.height)) || icon.size;
       if (!nw || !nh) return { width: icon.size, height: icon.size };
       const ratio = nw / nh;
-      if (ratio >= 1) {
-        return { width: icon.size, height: icon.size / ratio };
-      }
+      if (ratio >= 1) return { width: icon.size, height: icon.size / ratio };
       return { width: icon.size * ratio, height: icon.size };
     }
 
     function updateSelectedInfo() {
-      const selected = getSelectedText();
-      const info = document.getElementById('selectedInfo');
-      if (selected) {
-        info.textContent = `Selecionado: ${selected.text || 'Texto'}`;
+      const selectedText = getSelectedText();
+      if (selectedText) {
+        selectedInfo.textContent = `Selecionado: ${selectedText.text || 'Texto'}`;
         return;
       }
-      const icon = getSelectedIcon();
-      if (icon) {
-        info.textContent = `Selecionado: Ícone`;
+      const selectedIcon = getSelectedIcon();
+      if (selectedIcon) {
+        const label = selectedIcon.char ? `Ícone ${selectedIcon.char}` : 'Ícone';
+        selectedInfo.textContent = `Selecionado: ${label}`;
         return;
       }
-      info.textContent = 'Nenhum texto selecionado';
+      selectedInfo.textContent = 'Nenhum item selecionado';
     }
 
     function applyTextToControls(textObj) {
@@ -572,30 +706,65 @@
       draftReadyToAdd = false;
     }
 
+    function clearControlsForDraft() {
+      suppressSync = true;
+      document.getElementById('textInput').value = '';
+      document.getElementById('fontSelect').value = 'Dancing Script';
+      document.getElementById('sizeInput').value = '10';
+      document.getElementById('angleInput').value = '0';
+      document.getElementById('heightInput').value = '100';
+      document.getElementById('widthInput').value = '100';
+      document.getElementById('outlineInput').value = '0';
+      document.getElementById('curveInput').value = '0';
+      document.getElementById('curveDirection').value = 'none';
+      document.getElementById('curveSpreadInput').value = '100';
+      suppressSync = false;
+      draftReadyToAdd = false;
+    }
+
     function applySelectionToControls() {
       const selected = getSelectedText();
-      if (selected) {
-        applyTextToControls(selected);
-      }
+      if (selected) applyTextToControls(selected);
       updateSelectedInfo();
     }
 
     function buildCurvedGlyphs(text, ctxForMeasure, widthScale, heightScale, curvePx, curveDir, spreadFactor) {
       if (!text) return [];
-      const charWidths = [...text].map(char => ctxForMeasure.measureText(char).width * widthScale);
-      const totalScaledWidth = charWidths.reduce((a, b) => a + b, 0);
-      const span = Math.max(totalScaledWidth * spreadFactor, 1);
+
+      const chars = [...text];
+      const charWidths = chars.map(char => ctxForMeasure.measureText(char).width * widthScale);
+      const totalScaledWidth = Math.max(charWidths.reduce((a, b) => a + b, 0), 1);
+      const spreadSafe = Math.max(0.7, Math.min(1.5, spreadFactor || 1));
+      const effectiveSpread = 1 + ((spreadSafe - 1) * 0.35);
+      const chord = Math.max(totalScaledWidth * effectiveSpread, 1);
+
+      const curveStrength = Math.max(0, curvePx * 0.28);
+      const maxSagitta = chord * 0.22;
+      const sagitta = Math.min(curveStrength, maxSagitta);
+      if (sagitta <= 0.001 || curveDir === 'none') {
+        let cursorFlat = 0;
+        return chars.map((char, i) => {
+          const charWidth = charWidths[i];
+          const centerOriginal = cursorFlat + charWidth / 2;
+          cursorFlat += charWidth;
+          const u = totalScaledWidth === 0 ? 0 : ((centerOriginal / totalScaledWidth) - 0.5);
+          return { char, x: u * chord, y: 0, rotation: 0, width: charWidth };
+        });
+      }
+
       const dir = curveDir === 'up' ? -1 : 1;
+      const radius = (chord * chord) / (8 * sagitta) + (sagitta / 2);
 
       let cursor = 0;
-      return [...text].map((char, i) => {
+      return chars.map((char, i) => {
         const charWidth = charWidths[i];
         const centerOriginal = cursor + charWidth / 2;
         cursor += charWidth;
         const u = totalScaledWidth === 0 ? 0 : ((centerOriginal / totalScaledWidth) - 0.5);
-        const x = u * span;
-        const y = dir * curvePx * (1 - 4 * u * u);
-        const slope = dir * (-8 * curvePx * u) / span;
+        const x = u * chord;
+        const inside = Math.max(0.0001, (radius * radius) - (x * x));
+        const y = dir * (sagitta - radius + Math.sqrt(inside));
+        const slope = dir * (-x / Math.sqrt(inside));
         const rotation = Math.atan(slope);
         return { char, x, y, rotation, width: charWidth };
       });
@@ -653,12 +822,10 @@
       off.height = BASE_HEIGHT;
       const offCtx = off.getContext('2d', { willReadFrequently: true });
       offCtx.clearRect(0, 0, off.width, off.height);
-
       renderText(offCtx, { ...state, centerX: off.width / 2, centerY: off.height / 2, angleDeg: 0 }, false);
 
       const img = offCtx.getImageData(0, 0, off.width, off.height).data;
       let minX = off.width, minY = off.height, maxX = -1, maxY = -1;
-
       for (let y = 0; y < off.height; y++) {
         for (let x = 0; x < off.width; x++) {
           const a = img[(y * off.width + x) * 4 + 3];
@@ -672,7 +839,6 @@
       }
 
       if (maxX === -1 || maxY === -1) return computeTextBounds(state);
-
       const cx = off.width / 2;
       const cy = off.height / 2;
       return {
@@ -736,38 +902,123 @@
       }
     }
 
+    function getBlackRenderCanvas(icon, width, height) {
+      const w = Math.max(1, Math.round(width));
+      const h = Math.max(1, Math.round(height));
+      const cacheKey = `${w}x${h}`;
+      if (icon._renderCache && icon._renderCacheKey === cacheKey) return icon._renderCache;
+
+      const off = document.createElement('canvas');
+      off.width = w;
+      off.height = h;
+      const octx = off.getContext('2d');
+      octx.clearRect(0, 0, w, h);
+      octx.drawImage(icon.img, 0, 0, w, h);
+      octx.globalCompositeOperation = 'source-in';
+      octx.fillStyle = '#000';
+      octx.fillRect(0, 0, w, h);
+      octx.globalCompositeOperation = 'source-over';
+
+      icon._renderCache = off;
+      icon._renderCacheKey = cacheKey;
+      return off;
+    }
+
+    function invalidateIconCaches(icon) {
+      if (!icon) return;
+      icon._alphaBounds = null;
+      icon._renderCache = null;
+      icon._renderCacheKey = null;
+    }
+
+    function renderLoadedIcon(targetCtx, icon, dims) {
+      const blackCanvas = getBlackRenderCanvas(icon, dims.width, dims.height);
+      targetCtx.imageSmoothingEnabled = true;
+      targetCtx.imageSmoothingQuality = 'high';
+      targetCtx.drawImage(blackCanvas, -dims.width / 2, -dims.height / 2, dims.width, dims.height);
+    }
+
+    function getIconBounds(icon) {
+      const dims = getIconDimensions(icon);
+      if (icon.loaded && icon.img) {
+        if (!icon._alphaBounds) {
+          const w = Math.max(1, icon.img.naturalWidth || icon.img.width || Math.round(dims.width) || 1);
+          const h = Math.max(1, icon.img.naturalHeight || icon.img.height || Math.round(dims.height) || 1);
+          const off = document.createElement('canvas');
+          off.width = w;
+          off.height = h;
+          const octx = off.getContext('2d', { willReadFrequently: true });
+          octx.clearRect(0, 0, w, h);
+          octx.drawImage(icon.img, 0, 0, w, h);
+          const data = octx.getImageData(0, 0, w, h).data;
+          let minX = w, minY = h, maxX = -1, maxY = -1;
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const a = data[(y * w + x) * 4 + 3];
+              if (a > 10) {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          if (maxX === -1) {
+            icon._alphaBounds = { minX: -dims.width / 2, minY: -dims.height / 2, maxX: dims.width / 2, maxY: dims.height / 2 };
+          } else {
+            icon._alphaBounds = {
+              minX: minX * (dims.width / w) - dims.width / 2,
+              minY: minY * (dims.height / h) - dims.height / 2,
+              maxX: maxX * (dims.width / w) - dims.width / 2,
+              maxY: maxY * (dims.height / h) - dims.height / 2
+            };
+          }
+        }
+        return icon._alphaBounds;
+      }
+
+      const off = document.createElement('canvas');
+      const measureCtx = off.getContext('2d');
+      measureCtx.font = `${icon.size}px "Segoe UI Symbol","Noto Sans Symbols 2","Arial Unicode MS",sans-serif`;
+      measureCtx.textAlign = 'center';
+      measureCtx.textBaseline = 'middle';
+      const m = measureCtx.measureText(icon.char || '');
+      const left = m.actualBoundingBoxLeft ?? m.width / 2;
+      const right = m.actualBoundingBoxRight ?? m.width / 2;
+      const ascent = m.actualBoundingBoxAscent ?? icon.size * 0.75;
+      const descent = m.actualBoundingBoxDescent ?? icon.size * 0.25;
+      return { minX: -left, minY: -ascent, maxX: right, maxY: descent };
+    }
+
     function renderIcons(targetCtx, showSelection = false) {
       icons.forEach(icon => {
         const dims = getIconDimensions(icon);
         const cx = icon.x + dims.width / 2;
         const cy = icon.y + dims.height / 2;
+
         targetCtx.save();
         targetCtx.translate(cx, cy);
         targetCtx.rotate((icon.angle || 0) * Math.PI / 180);
+
         if (icon.loaded && icon.img) {
-          targetCtx.imageSmoothingEnabled = true;
-          targetCtx.imageSmoothingQuality = 'high';
-          targetCtx.drawImage(icon.img, -dims.width / 2, -dims.height / 2, dims.width, dims.height);
+          renderLoadedIcon(targetCtx, icon, dims);
         } else if (icon.char) {
-          targetCtx.font = `${icon.size}px sans-serif`;
+          targetCtx.font = `${icon.size}px "Segoe UI Symbol","Noto Sans Symbols 2","Arial Unicode MS",sans-serif`;
           targetCtx.fillStyle = '#000';
           targetCtx.textAlign = 'center';
           targetCtx.textBaseline = 'middle';
           targetCtx.fillText(icon.char, 0, 0);
         }
-        targetCtx.restore();
 
         if (showSelection && selectedItem && selectedItem.type === 'icon' && selectedItem.id === icon.id) {
-          targetCtx.save();
-          targetCtx.translate(cx, cy);
-          targetCtx.rotate((icon.angle || 0) * Math.PI / 180);
+          const b = getIconBounds(icon);
           targetCtx.strokeStyle = '#2563eb';
           targetCtx.lineWidth = 1.2;
           targetCtx.setLineDash([6, 3]);
-          targetCtx.strokeRect(-dims.width / 2, -dims.height / 2, dims.width, dims.height);
+          targetCtx.strokeRect(b.minX, b.minY, Math.max(1, b.maxX - b.minX), Math.max(1, b.maxY - b.minY));
           targetCtx.setLineDash([]);
-          targetCtx.restore();
         }
+        targetCtx.restore();
       });
     }
 
@@ -779,13 +1030,9 @@
 
       const selected = getSelectedText();
       const draft = getControlState();
-      const hasDraft = draft.text && !selected;
+      const hasDraft = draftReadyToAdd && draft.text && !selectedItem;
       if (hasDraft) {
-        renderText(targetCtx, {
-          ...draft,
-          centerX: BASE_WIDTH / 2,
-          centerY: BASE_HEIGHT / 2
-        }, false);
+        renderText(targetCtx, { ...draft, centerX: BASE_WIDTH / 2, centerY: BASE_HEIGHT / 2 }, false);
       }
 
       renderIcons(targetCtx, showSelection);
@@ -820,7 +1067,17 @@
       return { x: clampedX, y: desiredY };
     }
 
-    function addText(x = null, y = null) {
+    function selectItem(itemType, id) {
+      selectedItem = id == null ? null : { type: itemType, id };
+      if (itemType === 'icon' && id != null) draftReadyToAdd = false;
+      if (itemType === 'text' && id != null) {
+        const selected = getSelectedText();
+        if (selected) applyTextToControls(selected);
+      }
+      updateSelectedInfo();
+    }
+
+    async function addText(x = null, y = null) {
       const input = document.getElementById('textInput');
       const val = input.value.trim();
       if (!val) return;
@@ -828,25 +1085,44 @@
       const pos = (x != null && y != null) ? { x, y } : getNextTextPosition();
       const t = createTextFromControls(pos.x, pos.y);
       texts.push(t);
-      selectedItem = { type: 'text', id: t.id };
+      selectItem('text', t.id);
       applyTextToControls(t);
       input.value = '';
       draftReadyToAdd = false;
-      drawCanvas();
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
-    function duplicateSelected() {
-      const original = getSelectedText();
-      if (!original) return;
+    async function duplicateSelected() {
+      if (!selectedItem) return;
       pushHistory();
-      const copy = { ...original, id: nextTextId++, centerX: original.centerX + 20, centerY: original.centerY + 20 };
-      texts.push(copy);
-      selectedItem = { type: 'text', id: copy.id };
-      applyTextToControls(copy);
-      drawCanvas();
+      if (selectedItem.type === 'text') {
+        const original = getSelectedText();
+        if (!original) return;
+        const copy = { ...original, id: nextTextId++, centerX: original.centerX + 20, centerY: original.centerY + 20 };
+        texts.push(copy);
+        selectItem('text', copy.id);
+        applyTextToControls(copy);
+      } else {
+        const original = getSelectedIcon();
+        if (!original) return;
+        const copy = {
+          ...original,
+          id: nextIconId++,
+          x: original.x + 20,
+          y: original.y + 20,
+          _alphaBounds: null,
+          _renderCache: null,
+          _renderCacheKey: null
+        };
+        icons.push(copy);
+        selectItem('icon', copy.id);
+      }
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
-    function deleteSelected() {
+    async function deleteSelected() {
       if (!selectedItem) return;
       pushHistory();
       if (selectedItem.type === 'text') {
@@ -855,11 +1131,13 @@
         icons = icons.filter(i => i.id !== selectedItem.id);
       }
       selectedItem = null;
+      clearControlsForDraft();
       updateSelectedInfo();
-      drawCanvas();
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
-    function centerSelected() {
+    async function centerSelected() {
       if (!selectedItem) return;
       pushHistory();
       const text = getSelectedText();
@@ -873,17 +1151,17 @@
         icon.x = BASE_WIDTH / 2 - dims.width / 2;
         icon.y = BASE_HEIGHT / 2 - dims.height / 2;
       }
-      drawCanvas();
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
     function syncSelectedFromControls() {
       if (suppressSync) return;
       const selected = getSelectedText();
       if (!selected) return;
+
       const s = getControlState();
-      if (document.activeElement === document.getElementById('textInput')) {
-        selected.text = s.text;
-      }
+      selected.text = s.text;
       selected.font = s.font;
       selected.sizeMM = s.sizeMM;
       selected.angleDeg = s.angleDeg;
@@ -895,47 +1173,138 @@
       selected.curveSpread = s.curveSpread;
     }
 
+    function rebuildIconPalette() {
+      iconPalette.innerHTML = '';
+      PRESET_ICONS.forEach(char => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = char;
+        btn.title = `Adicionar ${char}`;
+        btn.addEventListener('click', async () => {
+          pushHistory();
+          const idx = icons.length;
+          const col = idx % 4;
+          const row = Math.floor(idx / 4);
+          const icon = { id: nextIconId++, char, x: 60 + col * 60, y: 70 + row * 60, size: 32, angle: 0 };
+          icons.push(icon);
+          draftReadyToAdd = false;
+          selectItem('icon', icon.id);
+          await drawCanvas();
+          scheduleProjectSave();
+        });
+        iconPalette.appendChild(btn);
+      });
+    }
+
     function rebuildIconControls() {
       iconList.innerHTML = '';
       icons.forEach((icon, index) => {
         const wrapper = document.createElement('div');
-        if (selectedItem && selectedItem.type === 'icon' && selectedItem.id === icon.id) wrapper.style.borderColor = '#2563eb';
+        if (selectedItem && selectedItem.type === 'icon' && selectedItem.id === icon.id) wrapper.classList.add('selected-layer');
+
         wrapper.innerHTML = `
-          <div style="font-size:18px; margin-bottom:6px;">${icon.char || '🖼️ Ícone'}</div>
+          <div style="font-size:18px; margin-bottom:6px; color:#111;">${icon.char || '🖼️ Ícone'}</div>
           <label style="font-size:0.88rem; margin-bottom:4px; color:#111;">Tamanho</label>
-          <input type="range" min="10" max="200" value="${icon.size}" data-index="${index}">
+          <input type="range" class="icon-size-slider" min="10" max="220" value="${Math.round(icon.size)}" data-size="${index}">
           <label style="font-size:0.88rem; margin-bottom:4px; color:#111;">Rotação</label>
-          <input type="range" min="-180" max="180" value="${icon.angle || 0}" data-rotate="${index}">
-          <button type="button" data-remove="${index}">Remover</button>
+          <input type="range" class="icon-rotate-slider" min="-180" max="180" value="${Math.round(icon.angle || 0)}" data-rotate="${index}">
+          <div class="icon-row">
+            <button type="button" class="icon-mini" data-duplicate="${index}">Duplicar</button>
+            <button type="button" data-remove="${index}">Remover</button>
+          </div>
         `;
+        wrapper.addEventListener('click', async (e) => {
+          if (e.target.matches('input, button')) return;
+          selectItem('icon', icon.id);
+          await drawCanvas();
+        });
         iconList.appendChild(wrapper);
       });
 
-      iconList.querySelectorAll('input[data-index]').forEach(slider => {
-        slider.addEventListener('input', e => {
-          const i = parseInt(e.target.dataset.index, 10);
-          pushHistory();
-          icons[i].size = parseInt(e.target.value, 10);
+      iconList.querySelectorAll('input[type="range"]').forEach(sl => {
+        const startEdit = ev => {
+          ev.stopPropagation();
+          iconSliderEditing = true;
+          beginLiveEditSession();
+        };
+        const finishEdit = () => {
+          if (!iconSliderEditing) return;
+          iconSliderEditing = false;
+          endLiveEditSession();
           drawCanvas();
+        };
+        sl.addEventListener('pointerdown', startEdit);
+        sl.addEventListener('mousedown', startEdit);
+        sl.addEventListener('touchstart', startEdit, { passive: true });
+        sl.addEventListener('pointerup', finishEdit);
+        sl.addEventListener('mouseup', finishEdit);
+        sl.addEventListener('touchend', finishEdit, { passive: true });
+        sl.addEventListener('blur', finishEdit);
+        sl.addEventListener('change', finishEdit);
+      });
+
+      iconList.querySelectorAll('input[data-size]').forEach(slider => {
+        slider.addEventListener('input', async e => {
+          const i = parseInt(e.target.dataset.size, 10);
+          const icon = icons[i];
+          if (!icon) return;
+          selectItem('icon', icon.id);
+          icon.size = parseInt(e.target.value, 10);
+          invalidateIconCaches(icon);
+          await drawCanvas();
         });
+        slider.addEventListener('change', () => endLiveEditSession());
       });
 
       iconList.querySelectorAll('input[data-rotate]').forEach(rotator => {
-        rotator.addEventListener('input', e => {
+        rotator.addEventListener('input', async e => {
           const i = parseInt(e.target.dataset.rotate, 10);
-          pushHistory();
-          icons[i].angle = parseInt(e.target.value, 10);
-          drawCanvas();
+          const icon = icons[i];
+          if (!icon) return;
+          selectItem('icon', icon.id);
+          let nextValue = parseInt(e.target.value, 10);
+          if (Math.abs(nextValue) <= 4) {
+            nextValue = 0;
+            e.target.value = '0';
+          }
+          icon.angle = nextValue;
+          await drawCanvas();
+        });
+        rotator.addEventListener('dblclick', async e => {
+          beginLiveEditSession();
+          e.target.value = '0';
+          const i = parseInt(e.target.dataset.rotate, 10);
+          const icon = icons[i];
+          if (icon) {
+            selectItem('icon', icon.id);
+            icon.angle = 0;
+            await drawCanvas();
+          }
+          endLiveEditSession();
+        });
+        rotator.addEventListener('change', () => endLiveEditSession());
+      });
+
+      iconList.querySelectorAll('button[data-duplicate]').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          const i = parseInt(e.target.dataset.duplicate, 10);
+          const icon = icons[i];
+          if (!icon) return;
+          selectItem('icon', icon.id);
+          await duplicateSelected();
         });
       });
 
       iconList.querySelectorAll('button[data-remove]').forEach(btn => {
-        btn.addEventListener('click', e => {
+        btn.addEventListener('click', async e => {
           const i = parseInt(e.target.dataset.remove, 10);
+          const icon = icons[i];
+          if (!icon) return;
           pushHistory();
-          if (selectedItem && selectedItem.type === 'icon' && selectedItem.id === icons[i].id) selectedItem = null;
-          icons.splice(i, 1);
-          drawCanvas();
+          icons = icons.filter(item => item.id !== icon.id);
+          if (selectedItem && selectedItem.type === 'icon' && selectedItem.id === icon.id) selectedItem = null;
+          await drawCanvas();
+          scheduleProjectSave();
         });
       });
     }
@@ -952,47 +1321,78 @@
     async function drawCanvas() {
       await loadAllFonts();
       renderScene(ctx, true);
+      drawResizeHandles(ctx);
 
       const selected = getSelectedText();
       const draft = getControlState();
       const measureState = selected ? selected : (draft.text ? { ...draft, centerX: BASE_WIDTH / 2, centerY: BASE_HEIGHT / 2 } : null);
       const bounds = measureState ? computeTextBounds(measureState) : { widthMm: 0, heightMm: 0 };
-      document.getElementById('realSizeText').textContent = `Altura: ${bounds.heightMm.toFixed(1)} mm x Largura: ${bounds.widthMm.toFixed(1)} mm`;
+      document.getElementById('realSizeText').textContent =
+        `Altura: ${bounds.heightMm.toFixed(1)} mm x Largura: ${bounds.widthMm.toFixed(1)} mm`;
 
       updateSelectedInfo();
-      rebuildIconControls();
+      if (!iconSliderEditing) rebuildIconControls();
     }
 
-    function saveProject() {
+    function persistProject(silent = false) {
       try {
         localStorage.setItem(PROJECT_KEY, cloneState());
-        document.getElementById('selectedInfo').textContent = 'Projeto salvo neste aparelho';
+        if (!silent) setProjectStatus('Projeto salvo com sucesso.', 'success', true);
       } catch (e) {
         console.warn('Falha ao salvar projeto', e);
-        document.getElementById('selectedInfo').textContent = 'Falha ao salvar projeto';
+        setProjectStatus('Falha ao salvar projeto neste navegador.', 'error', true);
       }
     }
 
-    async function loadProject() {
-      const raw = localStorage.getItem(PROJECT_KEY);
+    function scheduleProjectSave() {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        persistProject(true);
+      }, AUTO_SAVE_DELAY);
+    }
+
+    async function loadProject(options = {}) {
+      const keys = [PROJECT_KEY, ...LEGACY_PROJECT_KEYS];
+      let raw = null;
+      let foundKey = null;
+
+      for (const key of keys) {
+        const candidate = localStorage.getItem(key);
+        if (candidate) {
+          raw = candidate;
+          foundKey = key;
+          break;
+        }
+      }
+
       if (!raw) {
-        document.getElementById('selectedInfo').textContent = 'Nenhum projeto salvo';
-        return;
+        if (!options.silent) setProjectStatus('Nenhum projeto salvo encontrado.', 'error', true);
+        return false;
       }
-      await restoreState(raw);
-      applySelectionToControls();
-      drawCanvas();
-      document.getElementById('selectedInfo').textContent = 'Projeto carregado';
+
+      try {
+        await restoreState(raw);
+        if (foundKey && foundKey !== PROJECT_KEY) localStorage.setItem(PROJECT_KEY, raw);
+        applySelectionToControls();
+        await drawCanvas();
+        if (!options.silent) setProjectStatus('Projeto carregado com sucesso.', 'success', true);
+        return true;
+      } catch (e) {
+        console.warn('Falha ao carregar projeto', e);
+        if (!options.silent) setProjectStatus('Projeto salvo corrompido ou incompatível.', 'error', true);
+        return false;
+      }
     }
 
-    function clearAll() {
+    async function clearAll() {
       if (!confirm('Limpar todos os textos e ícones?')) return;
       pushHistory();
       texts = [];
       icons = [];
       selectedItem = null;
-      document.getElementById('textInput').value = '';
-      drawCanvas();
+      clearControlsForDraft();
+      await drawCanvas();
+      scheduleProjectSave();
     }
 
     function getCanvasCoords(clientX, clientY) {
@@ -1015,12 +1415,94 @@
       };
     }
 
+
+    function localToWorld(lx, ly, cx, cy, angleDeg) {
+      const a = angleDeg * Math.PI / 180;
+      return {
+        x: cx + lx * Math.cos(a) - ly * Math.sin(a),
+        y: cy + lx * Math.sin(a) + ly * Math.cos(a)
+      };
+    }
+
+    function getSelectedGeometry() {
+      const text = getSelectedText();
+      if (text) {
+        return {
+          kind: 'text',
+          item: text,
+          cx: text.centerX,
+          cy: text.centerY,
+          angleDeg: text.angleDeg || 0,
+          bounds: computeSelectionBounds(text)
+        };
+      }
+
+      const icon = getSelectedIcon();
+      if (icon) {
+        const dims = getIconDimensions(icon);
+        return {
+          kind: 'icon',
+          item: icon,
+          cx: icon.x + dims.width / 2,
+          cy: icon.y + dims.height / 2,
+          angleDeg: icon.angle || 0,
+          bounds: getIconBounds(icon)
+        };
+      }
+
+      return null;
+    }
+
+    function getResizeHandles(geometry) {
+      if (!geometry) return [];
+      const { minX, minY, maxX, maxY } = geometry.bounds;
+      const corners = [
+        { name: 'nw', lx: minX, ly: minY },
+        { name: 'ne', lx: maxX, ly: minY },
+        { name: 'se', lx: maxX, ly: maxY },
+        { name: 'sw', lx: minX, ly: maxY }
+      ];
+      return corners.map(corner => ({
+        ...corner,
+        ...localToWorld(corner.lx, corner.ly, geometry.cx, geometry.cy, geometry.angleDeg)
+      }));
+    }
+
+    function pickResizeHandle(x, y) {
+      const geometry = getSelectedGeometry();
+      if (!geometry) return null;
+      const handles = getResizeHandles(geometry);
+      for (const handle of handles) {
+        if (Math.hypot(x - handle.x, y - handle.y) <= 14) {
+          return { geometry, handle };
+        }
+      }
+      return null;
+    }
+
+    function drawResizeHandles(targetCtx) {
+      const geometry = getSelectedGeometry();
+      if (!geometry) return;
+      const handles = getResizeHandles(geometry);
+      targetCtx.save();
+      handles.forEach(handle => {
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.strokeStyle = '#2563eb';
+        targetCtx.lineWidth = 2;
+        targetCtx.beginPath();
+        targetCtx.rect(handle.x - 6, handle.y - 6, 12, 12);
+        targetCtx.fill();
+        targetCtx.stroke();
+      });
+      targetCtx.restore();
+    }
+
     function pickText(x, y) {
       for (let i = texts.length - 1; i >= 0; i--) {
         const t = texts[i];
-        const b = computeSelectionBounds(t);
         const p = rotatePoint(x, y, t.centerX, t.centerY, t.angleDeg);
-        if (p.x >= b.minX && p.x <= b.maxX && p.y >= b.minY && p.y <= b.maxY) return t;
+        const b = computeSelectionBounds(t);
+        if (p.x >= b.minX - 8 && p.x <= b.maxX + 8 && p.y >= b.minY - 8 && p.y <= b.maxY + 8) return t;
       }
       return null;
     }
@@ -1032,7 +1514,8 @@
         const cx = icon.x + dims.width / 2;
         const cy = icon.y + dims.height / 2;
         const p = rotatePoint(x, y, cx, cy, icon.angle || 0);
-        if (p.x >= -dims.width / 2 && p.x <= dims.width / 2 && p.y >= -dims.height / 2 && p.y <= dims.height / 2) return icon;
+        const b = getIconBounds(icon);
+        if (p.x >= b.minX && p.x <= b.maxX && p.y >= b.minY && p.y <= b.maxY) return icon;
       }
       return null;
     }
@@ -1048,139 +1531,6 @@
       }
     }
 
-    document.getElementById('addTextBtn').addEventListener('click', addText);
-    document.getElementById('duplicateTextBtn').addEventListener('click', duplicateSelected);
-    document.getElementById('centerTextBtn').addEventListener('click', centerSelected);
-    document.getElementById('deleteTextBtn').addEventListener('click', deleteSelected);
-    document.getElementById('undoBtn').addEventListener('click', undo);
-    document.getElementById('redoBtn').addEventListener('click', redo);
-    document.getElementById('clearAllBtn').addEventListener('click', clearAll);
-    document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
-    document.getElementById('loadProjectBtn').addEventListener('click', loadProject);
-
-    document.getElementById('textInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        addText();
-      }
-    });
-
-    document.querySelectorAll('input, select').forEach(el => {
-      if (el.id === 'iconUpload' || el.id === 'prebuiltIcons' || el.id === 'textInput') return;
-      el.addEventListener('input', () => {
-        syncSelectedFromControls();
-        drawCanvas();
-      });
-    });
-
-    document.getElementById('textInput').addEventListener('input', () => {
-      draftReadyToAdd = document.getElementById('textInput').value.trim().length > 0;
-      syncSelectedFromControls();
-      drawCanvas();
-    });
-
-    document.getElementById('prebuiltIcons').addEventListener('change', e => {
-      if (!e.target.value) return;
-      pushHistory();
-      icons.push({ id: nextIconId++, char: e.target.value, x: 100, y: 100, size: 32, angle: 0 });
-      selectedItem = { type: 'icon', id: nextIconId - 1 };
-      e.target.value = '';
-      drawCanvas();
-    });
-
-    document.getElementById('iconUpload').addEventListener('change', e => {
-      for (const file of e.target.files) {
-        const lower = file.name.toLowerCase();
-        if (lower.endsWith('.svg')) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const svgText = reader.result;
-            const blob = new Blob([svgText], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => {
-              pushHistory();
-              icons.push({
-                id: nextIconId++,
-                img, loaded: true, x: 100, y: 100, size: 40, angle: 0,
-                originalSvg: svgText,
-                srcData: url,
-                naturalWidth: img.naturalWidth || 40,
-                naturalHeight: img.naturalHeight || 40
-              });
-              selectedItem = { type: 'icon', id: nextIconId - 1 };
-              drawCanvas();
-              URL.revokeObjectURL(url);
-            };
-            img.src = url;
-          };
-          reader.readAsText(file);
-        } else {
-          const img = new Image();
-          const url = URL.createObjectURL(file);
-          img.onload = () => {
-            pushHistory();
-            const off = document.createElement('canvas');
-            off.width = img.naturalWidth || img.width || 40;
-            off.height = img.naturalHeight || img.height || 40;
-            off.getContext('2d').drawImage(img, 0, 0);
-            icons.push({ id: nextIconId++, img, loaded: true, x: 100, y: 100, size: 40, angle: 0, srcData: off.toDataURL('image/png'), naturalWidth: off.width, naturalHeight: off.height });
-            selectedItem = { type: 'icon', id: nextIconId - 1 };
-            drawCanvas();
-            URL.revokeObjectURL(url);
-          };
-          img.src = url;
-        }
-      }
-    });
-
-    canvas.addEventListener('mousedown', e => {
-      const p = getCanvasCoords(e.clientX, e.clientY);
-      const icon = pickIcon(p.x, p.y);
-      if (icon) {
-        selectedItem = { type: 'icon', id: icon.id };
-        bringSelectedToFront();
-        dragging = { type: 'icon', icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
-        drawCanvas();
-        return;
-      }
-
-      const text = pickText(p.x, p.y);
-      if (text) {
-        selectedItem = { type: 'text', id: text.id };
-        bringSelectedToFront();
-        applyTextToControls(text);
-        dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
-        drawCanvas();
-      } else {
-        const draftVal = document.getElementById('textInput').value.trim();
-        if (draftReadyToAdd && draftVal) {
-          addText(p.x, p.y);
-        } else {
-          selectedItem = null;
-          draftReadyToAdd = false;
-          updateSelectedInfo();
-          drawCanvas();
-        }
-      }
-    });
-
-    canvas.addEventListener('mousemove', e => {
-      if (!dragging) return;
-      const p = getCanvasCoords(e.clientX, e.clientY);
-      if (dragging.type === 'icon') {
-        dragging.icon.x = p.x - dragging.offsetX;
-        dragging.icon.y = p.y - dragging.offsetY;
-      } else if (dragging.type === 'text') {
-        dragging.text.centerX = p.x - dragging.offsetX;
-        dragging.text.centerY = p.y - dragging.offsetY;
-      }
-      drawCanvas();
-    });
-
-    canvas.addEventListener('mouseup', () => { dragging = null; });
-    canvas.addEventListener('mouseleave', () => { dragging = null; });
-
     function getTouchDistance(t1, t2) {
       return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
     }
@@ -1189,116 +1539,92 @@
       return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
     }
 
-    canvas.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) {
-        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
-        const p = getCanvasCoords(midpoint.x, midpoint.y);
-        const icon = pickIcon(p.x, p.y);
-        if (icon) {
-          selectedItem = { type: 'icon', id: icon.id };
-          dragging = {
-            type: 'iconPinch',
-            icon,
-            startDistance: getTouchDistance(e.touches[0], e.touches[1]),
-            startSize: icon.size,
-            midpointOffsetX: p.x - (icon.x + icon.size / 2),
-            midpointOffsetY: p.y - (icon.y + icon.size / 2)
-          };
-          drawCanvas();
-          return;
-        }
-        const text = pickText(p.x, p.y) || getSelectedText();
-        if (text) {
-          selectedItem = { type: 'text', id: text.id };
-          applyTextToControls(text);
-          dragging = {
-            type: 'textPinch',
-            text,
-            startDistance: getTouchDistance(e.touches[0], e.touches[1]),
-            startSizeMM: text.sizeMM,
-            midpointOffsetX: p.x - text.centerX,
-            midpointOffsetY: p.y - text.centerY
-          };
-          drawCanvas();
-          return;
-        }
-      }
+    async function addIconChar(char, x = 100, y = 100, size = 32) {
+      pushHistory();
+      const icon = { id: nextIconId++, char, x, y, size, angle: 0 };
+      icons.push(icon);
+      draftReadyToAdd = false;
+      selectItem('icon', icon.id);
+      await drawCanvas();
+      scheduleProjectSave();
+    }
 
-      const touch = e.touches[0];
-      const p = getCanvasCoords(touch.clientX, touch.clientY);
-      const icon = pickIcon(p.x, p.y);
-      if (icon) {
-        selectedItem = { type: 'icon', id: icon.id };
-        dragging = { type: 'icon', icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
-        drawCanvas();
-        return;
-      }
-      const text = pickText(p.x, p.y);
-      if (text) {
-        selectedItem = { type: 'text', id: text.id };
-        applyTextToControls(text);
-        dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
-        drawCanvas();
+    async function handleImageFile(file) {
+      const lower = file.name.toLowerCase();
+      if (lower.endsWith('.svg')) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const svgText = reader.result;
+          const blob = new Blob([svgText], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = async () => {
+            pushHistory();
+            const icon = {
+              id: nextIconId++,
+              img,
+              loaded: true,
+              x: 100,
+              y: 100,
+              size: 40,
+              angle: 0,
+              originalSvg: svgText,
+              srcData: null,
+              naturalWidth: img.naturalWidth || 40,
+              naturalHeight: img.naturalHeight || 40
+            };
+            icons.push(icon);
+            selectItem('icon', icon.id);
+            await drawCanvas();
+            scheduleProjectSave();
+            URL.revokeObjectURL(url);
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            setProjectStatus(`Falha ao carregar ${file.name}.`, 'error', true);
+          };
+          img.src = url;
+        };
+        reader.readAsText(file);
       } else {
-        const draftVal = document.getElementById('textInput').value.trim();
-        if (draftReadyToAdd && draftVal) {
-          addText(p.x, p.y);
-        } else {
-          selectedItem = null;
-          draftReadyToAdd = false;
-          drawCanvas();
-        }
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = async () => {
+          pushHistory();
+          const off = document.createElement('canvas');
+          off.width = img.naturalWidth || img.width || 40;
+          off.height = img.naturalHeight || img.height || 40;
+          const octx = off.getContext('2d');
+          octx.drawImage(img, 0, 0);
+          const icon = {
+            id: nextIconId++,
+            img,
+            loaded: true,
+            x: 100,
+            y: 100,
+            size: 40,
+            angle: 0,
+            srcData: off.toDataURL('image/png'),
+            naturalWidth: off.width,
+            naturalHeight: off.height
+          };
+          icons.push(icon);
+          selectItem('icon', icon.id);
+          await drawCanvas();
+          scheduleProjectSave();
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          setProjectStatus(`Falha ao carregar ${file.name}.`, 'error', true);
+        };
+        img.src = url;
       }
-    }, { passive: true });
-
-    canvas.addEventListener('touchmove', e => {
-      if (!dragging) return;
-
-      if (dragging.type === 'iconPinch' && e.touches.length === 2) {
-        const distance = getTouchDistance(e.touches[0], e.touches[1]);
-        const ratio = distance / Math.max(1, dragging.startDistance);
-        dragging.icon.size = Math.max(10, Math.min(200, Math.round(dragging.startSize * ratio)));
-        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
-        const p = getCanvasCoords(midpoint.x, midpoint.y);
-        dragging.icon.x = p.x - dragging.midpointOffsetX - dragging.icon.size / 2;
-        dragging.icon.y = p.y - dragging.midpointOffsetY - dragging.icon.size / 2;
-        drawCanvas();
-        e.preventDefault();
-        return;
-      }
-
-      if (dragging.type === 'textPinch' && e.touches.length === 2) {
-        const distance = getTouchDistance(e.touches[0], e.touches[1]);
-        const ratio = distance / Math.max(1, dragging.startDistance);
-        dragging.text.sizeMM = Math.max(5, Math.min(150, dragging.startSizeMM * ratio));
-        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
-        const p = getCanvasCoords(midpoint.x, midpoint.y);
-        dragging.text.centerX = p.x - dragging.midpointOffsetX;
-        dragging.text.centerY = p.y - dragging.midpointOffsetY;
-        applyTextToControls(dragging.text);
-        drawCanvas();
-        e.preventDefault();
-        return;
-      }
-
-      const touch = e.touches[0];
-      const p = getCanvasCoords(touch.clientX, touch.clientY);
-      if (dragging.type === 'icon') {
-        dragging.icon.x = p.x - dragging.offsetX;
-        dragging.icon.y = p.y - dragging.offsetY;
-      } else if (dragging.type === 'text') {
-        dragging.text.centerX = p.x - dragging.offsetX;
-        dragging.text.centerY = p.y - dragging.offsetY;
-      }
-      drawCanvas();
-      e.preventDefault();
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', () => { dragging = null; });
+    }
 
     async function saveAsPNG() {
       await loadAllFonts();
-      const exportScale = 1.2;
+      const exportScale = 2;
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = Math.round(BASE_WIDTH * exportScale);
       tempCanvas.height = Math.round(BASE_HEIGHT * exportScale);
@@ -1309,6 +1635,7 @@
       tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
       tempCtx.scale(exportScale, exportScale);
       renderScene(tempCtx, false);
+
       const link = document.createElement('a');
       link.href = tempCanvas.toDataURL('image/png');
       link.download = 'gravacao_hd.png';
@@ -1335,7 +1662,8 @@
 
       if (state.curve > 0 && state.curveDir !== 'none') {
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = 10; tempCanvas.height = 10;
+        tempCanvas.width = 10;
+        tempCanvas.height = 10;
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
         const glyphs = buildCurvedGlyphs(state.text, tempCtx, state.widthScale, state.heightScale, mmToPx(state.curve), state.curveDir, state.curveSpread);
@@ -1355,26 +1683,15 @@
         const dims = getIconDimensions(icon);
         const centerX = icon.x + dims.width / 2;
         const centerY = icon.y + dims.height / 2;
-        if (icon.originalSvg) {
-          const inner = icon.originalSvg
-            .replace(/<\?xml[\s\S]*?\?>/g, '')
-            .replace(/<!DOCTYPE[\s\S]*?>/g, '')
-            .replace(/<svg[^>]*>/i, '')
-            .replace(/<\/svg>/i, '');
-          const base = Math.max(icon.naturalWidth || dims.width, icon.naturalHeight || dims.height, 1);
-          const scale = Math.max(dims.width, dims.height) / base;
-          return `<g transform="translate(${centerX} ${centerY}) rotate(${icon.angle || 0}) translate(${-dims.width / 2} ${-dims.height / 2}) scale(${scale} ${scale})">${inner}</g>`;
-        }
+
         if (icon.loaded && icon.img) {
-          const offscreen = document.createElement('canvas');
-          offscreen.width = icon.img.naturalWidth || icon.size;
-          offscreen.height = icon.img.naturalHeight || icon.size;
-          const offctx = offscreen.getContext('2d');
-          offctx.drawImage(icon.img, 0, 0);
+          const offscreen = getBlackRenderCanvas(icon, dims.width, dims.height);
           const href = offscreen.toDataURL('image/png');
-          return `<image x="${icon.x}" y="${icon.y}" width="${dims.width}" height="${dims.height}" href="${href}" transform="${icon.angle ? `rotate(${icon.angle} ${centerX} ${centerY})` : ''}" />`;
+          const transform = icon.angle ? ` transform="rotate(${icon.angle} ${centerX} ${centerY})"` : '';
+          return `<image x="${icon.x}" y="${icon.y}" width="${dims.width}" height="${dims.height}" href="${href}"${transform} />`;
         }
-        return `<text x="${centerX}" y="${centerY}" font-family="sans-serif" font-size="${icon.size}" fill="#000" text-anchor="middle" dominant-baseline="middle" transform="${icon.angle ? `rotate(${icon.angle} ${centerX} ${centerY})` : ''}">${escapeXml(icon.char)}</text>`;
+
+        return `<text x="${centerX}" y="${centerY}" font-family="Segoe UI Symbol, Noto Sans Symbols 2, Arial Unicode MS, sans-serif" font-size="${icon.size}" fill="#000" text-anchor="middle" dominant-baseline="middle"${icon.angle ? ` transform="rotate(${icon.angle} ${centerX} ${centerY})"` : ''}>${escapeXml(icon.char || '')}</text>`;
       }).join('');
     }
 
@@ -1392,22 +1709,451 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     }
 
+    function bindRangeDefaults(element, defaultValue, snapDistance = 2) {
+      if (!element) return;
+      const defaultNumber = Number(defaultValue);
+      element.dataset.defaultValue = String(defaultValue);
+
+      element.addEventListener('input', () => {
+        const current = Number(element.value);
+        if (Number.isFinite(defaultNumber) && Math.abs(current - defaultNumber) <= snapDistance) {
+          if (String(element.value) !== String(defaultValue)) {
+            element.value = String(defaultValue);
+          }
+        }
+      });
+
+      element.addEventListener('dblclick', async () => {
+        beginLiveEditSession();
+        element.value = String(defaultValue);
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        endLiveEditSession();
+        await drawCanvas();
+      });
+    }
+
+    [
+      ['angleInput', 0, 4],
+      ['heightInput', 100, 4],
+      ['widthInput', 100, 4],
+      ['outlineInput', 0, 0.25],
+      ['curveInput', 0, 4],
+      ['curveSpreadInput', 100, 4]
+    ].forEach(([id, value, snap]) => bindRangeDefaults(document.getElementById(id), value, snap));
+
+    document.getElementById('addTextBtn').addEventListener('click', () => addText());
+    document.getElementById('duplicateTextBtn').addEventListener('click', () => duplicateSelected());
+    document.getElementById('centerTextBtn').addEventListener('click', () => centerSelected());
+    document.getElementById('deleteTextBtn').addEventListener('click', () => deleteSelected());
+    document.getElementById('undoBtn').addEventListener('click', () => undo());
+    document.getElementById('redoBtn').addEventListener('click', () => redo());
+    document.getElementById('clearAllBtn').addEventListener('click', () => clearAll());
+    document.getElementById('saveProjectBtn').addEventListener('click', () => persistProject(false));
+    document.getElementById('loadProjectBtn').addEventListener('click', () => loadProject());
     document.getElementById('savePngBtn').addEventListener('click', saveAsPNG);
     document.getElementById('saveSvgBtn').addEventListener('click', saveAsSVG);
 
-    // Stable defaults for GitHub Pages/browser restore quirks
-    window.addEventListener('pageshow', () => {
-      if (!texts.length && !icons.length) {
+    document.getElementById('textInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addText();
+      }
+    });
+
+    const liveEditControls = [
+      'textInput', 'fontSelect', 'sizeInput', 'angleInput', 'heightInput', 'widthInput',
+      'outlineInput', 'curveDirection', 'curveInput', 'curveSpreadInput'
+    ].map(id => document.getElementById(id));
+
+    liveEditControls.forEach(el => {
+      el.addEventListener('pointerdown', () => beginLiveEditSession());
+      el.addEventListener('focus', () => beginLiveEditSession());
+      el.addEventListener('blur', () => endLiveEditSession());
+      el.addEventListener('change', () => endLiveEditSession());
+    });
+
+    document.querySelectorAll('input, select').forEach(el => {
+      if (el.id === 'iconUpload') return;
+      el.addEventListener('input', async () => {
+        const textInput = document.getElementById('textInput');
+        if (el.id === 'textInput') {
+          if (selectedItem && selectedItem.type === 'text') {
+            selectedItem = null;
+            updateSelectedInfo();
+          }
+          draftReadyToAdd = textInput.value.trim().length > 0;
+        } else {
+          draftReadyToAdd = textInput.value.trim().length > 0;
+          syncSelectedFromControls();
+        }
+        await drawCanvas();
+      });
+    });
+
+    document.getElementById('iconUpload').addEventListener('change', async e => {
+      const files = Array.from(e.target.files || []);
+      for (const file of files) {
+        await handleImageFile(file);
+      }
+      e.target.value = '';
+    });
+
+    canvas.addEventListener('mousedown', async e => {
+      const p = getCanvasCoords(e.clientX, e.clientY);
+      const handleHit = pickResizeHandle(p.x, p.y);
+      if (handleHit) {
+        pushHistory();
+        if (handleHit.geometry.kind === 'text') {
+          const text = handleHit.geometry.item;
+          dragging = {
+            type: 'textResize',
+            text,
+            centerX: text.centerX,
+            centerY: text.centerY,
+            startDistance: Math.max(1, Math.hypot(p.x - text.centerX, p.y - text.centerY)),
+            startSizeMM: text.sizeMM
+          };
+          applyTextToControls(text);
+        } else {
+          const icon = handleHit.geometry.item;
+          dragging = {
+            type: 'iconResize',
+            icon,
+            centerX: handleHit.geometry.cx,
+            centerY: handleHit.geometry.cy,
+            startDistance: Math.max(1, Math.hypot(p.x - handleHit.geometry.cx, p.y - handleHit.geometry.cy)),
+            startSize: icon.size
+          };
+        }
+        await drawCanvas();
+        return;
+      }
+
+      const icon = pickIcon(p.x, p.y);
+      if (icon) {
+        draftReadyToAdd = false;
+        selectItem('icon', icon.id);
+        bringSelectedToFront();
+        dragging = { type: 'icon', icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
+        pushHistory();
+        await drawCanvas();
+        return;
+      }
+
+      const text = pickText(p.x, p.y);
+      if (text) {
+        selectItem('text', text.id);
+        bringSelectedToFront();
+        applyTextToControls(text);
+        dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
+        pushHistory();
+        await drawCanvas();
+      } else {
+        const draftValue = document.getElementById('textInput').value.trim();
+        if (draftValue) {
+          await addText(p.x, p.y);
+          return;
+        }
+        selectedItem = null;
+        draftReadyToAdd = false;
+        updateSelectedInfo();
+        await drawCanvas();
+      }
+    });
+
+    canvas.addEventListener('mousemove', async e => {
+      const p = getCanvasCoords(e.clientX, e.clientY);
+      if (!dragging) {
+        const handleHit = pickResizeHandle(p.x, p.y);
+        canvas.style.cursor = handleHit ? 'nwse-resize' : 'grab';
+        return;
+      }
+
+      if (dragging.type === 'icon') {
+        dragging.icon.x = p.x - dragging.offsetX;
+        dragging.icon.y = p.y - dragging.offsetY;
+      } else if (dragging.type === 'text') {
+        dragging.text.centerX = p.x - dragging.offsetX;
+        dragging.text.centerY = p.y - dragging.offsetY;
+      } else if (dragging.type === 'textResize') {
+        const ratio = Math.max(0.2, Math.min(8, Math.hypot(p.x - dragging.centerX, p.y - dragging.centerY) / dragging.startDistance));
+        dragging.text.sizeMM = Math.max(5, Math.min(150, dragging.startSizeMM * ratio));
+        applyTextToControls(dragging.text);
+      } else if (dragging.type === 'iconResize') {
+        const ratio = Math.max(0.2, Math.min(8, Math.hypot(p.x - dragging.centerX, p.y - dragging.centerY) / dragging.startDistance));
+        dragging.icon.size = Math.max(10, Math.min(220, Math.round(dragging.startSize * ratio)));
+        invalidateIconCaches(dragging.icon);
+        const dims = getIconDimensions(dragging.icon);
+        dragging.icon.x = dragging.centerX - dims.width / 2;
+        dragging.icon.y = dragging.centerY - dims.height / 2;
+      }
+      await drawCanvas();
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      if (dragging) scheduleProjectSave();
+      dragging = null;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      if (dragging) scheduleProjectSave();
+      dragging = null;
+    });
+
+    canvas.addEventListener('touchstart', async e => {
+      if (e.touches.length === 2) {
+        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
+        const p = getCanvasCoords(midpoint.x, midpoint.y);
+        const icon = pickIcon(p.x, p.y);
+        if (icon) {
+          selectItem('icon', icon.id);
+          const dims = getIconDimensions(icon);
+          dragging = {
+            type: 'iconPinch',
+            icon,
+            startDistance: getTouchDistance(e.touches[0], e.touches[1]),
+            startSize: icon.size,
+            midpointOffsetX: p.x - (icon.x + dims.width / 2),
+            midpointOffsetY: p.y - (icon.y + dims.height / 2)
+          };
+          pushHistory();
+          await drawCanvas();
+          return;
+        }
+
+        const text = pickText(p.x, p.y) || getSelectedText();
+        if (text) {
+          selectItem('text', text.id);
+          applyTextToControls(text);
+          dragging = {
+            type: 'textPinch',
+            text,
+            startDistance: getTouchDistance(e.touches[0], e.touches[1]),
+            startSizeMM: text.sizeMM,
+            midpointOffsetX: p.x - text.centerX,
+            midpointOffsetY: p.y - text.centerY
+          };
+          pushHistory();
+          await drawCanvas();
+          return;
+        }
+      }
+
+      const touch = e.touches[0];
+      const p = getCanvasCoords(touch.clientX, touch.clientY);
+      const handleHit = pickResizeHandle(p.x, p.y);
+      if (handleHit) {
+        pushHistory();
+        if (handleHit.geometry.kind === 'text') {
+          const text = handleHit.geometry.item;
+          dragging = {
+            type: 'textResize',
+            text,
+            centerX: text.centerX,
+            centerY: text.centerY,
+            startDistance: Math.max(1, Math.hypot(p.x - text.centerX, p.y - text.centerY)),
+            startSizeMM: text.sizeMM
+          };
+          applyTextToControls(text);
+        } else {
+          const icon = handleHit.geometry.item;
+          dragging = {
+            type: 'iconResize',
+            icon,
+            centerX: handleHit.geometry.cx,
+            centerY: handleHit.geometry.cy,
+            startDistance: Math.max(1, Math.hypot(p.x - handleHit.geometry.cx, p.y - handleHit.geometry.cy)),
+            startSize: icon.size
+          };
+        }
+        await drawCanvas();
+        return;
+      }
+
+      const icon = pickIcon(p.x, p.y);
+      if (icon) {
+        draftReadyToAdd = false;
+        selectItem('icon', icon.id);
+        dragging = { type: 'icon', icon, offsetX: p.x - icon.x, offsetY: p.y - icon.y };
+        pushHistory();
+        await drawCanvas();
+        return;
+      }
+
+      const text = pickText(p.x, p.y);
+      if (text) {
+        selectItem('text', text.id);
+        applyTextToControls(text);
+        dragging = { type: 'text', text, offsetX: p.x - text.centerX, offsetY: p.y - text.centerY };
+        pushHistory();
+        await drawCanvas();
+      } else {
+        const draftValue = document.getElementById('textInput').value.trim();
+        if (draftValue) {
+          await addText(p.x, p.y);
+          return;
+        }
+        selectedItem = null;
+        draftReadyToAdd = false;
+        updateSelectedInfo();
+        await drawCanvas();
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', async e => {
+      if (!dragging) return;
+
+      if (dragging.type === 'iconPinch' && e.touches.length === 2) {
+        const distance = getTouchDistance(e.touches[0], e.touches[1]);
+        const ratio = distance / Math.max(1, dragging.startDistance);
+        dragging.icon.size = Math.max(10, Math.min(220, Math.round(dragging.startSize * ratio)));
+        invalidateIconCaches(dragging.icon);
+        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
+        const p = getCanvasCoords(midpoint.x, midpoint.y);
+        const dims = getIconDimensions(dragging.icon);
+        dragging.icon.x = p.x - dragging.midpointOffsetX - dims.width / 2;
+        dragging.icon.y = p.y - dragging.midpointOffsetY - dims.height / 2;
+        await drawCanvas();
+        e.preventDefault();
+        return;
+      }
+
+      if (dragging.type === 'textPinch' && e.touches.length === 2) {
+        const distance = getTouchDistance(e.touches[0], e.touches[1]);
+        const ratio = distance / Math.max(1, dragging.startDistance);
+        dragging.text.sizeMM = Math.max(5, Math.min(150, dragging.startSizeMM * ratio));
+        const midpoint = getTouchMidpoint(e.touches[0], e.touches[1]);
+        const p = getCanvasCoords(midpoint.x, midpoint.y);
+        dragging.text.centerX = p.x - dragging.midpointOffsetX;
+        dragging.text.centerY = p.y - dragging.midpointOffsetY;
+        applyTextToControls(dragging.text);
+        await drawCanvas();
+        e.preventDefault();
+        return;
+      }
+
+      const touch = e.touches[0];
+      const p = getCanvasCoords(touch.clientX, touch.clientY);
+      if (dragging.type === 'icon') {
+        dragging.icon.x = p.x - dragging.offsetX;
+        dragging.icon.y = p.y - dragging.offsetY;
+      } else if (dragging.type === 'text') {
+        dragging.text.centerX = p.x - dragging.offsetX;
+        dragging.text.centerY = p.y - dragging.offsetY;
+      } else if (dragging.type === 'textResize') {
+        const ratio = Math.max(0.2, Math.min(8, Math.hypot(p.x - dragging.centerX, p.y - dragging.centerY) / dragging.startDistance));
+        dragging.text.sizeMM = Math.max(5, Math.min(150, dragging.startSizeMM * ratio));
+        applyTextToControls(dragging.text);
+      } else if (dragging.type === 'iconResize') {
+        const ratio = Math.max(0.2, Math.min(8, Math.hypot(p.x - dragging.centerX, p.y - dragging.centerY) / dragging.startDistance));
+        dragging.icon.size = Math.max(10, Math.min(220, Math.round(dragging.startSize * ratio)));
+        invalidateIconCaches(dragging.icon);
+        const dims = getIconDimensions(dragging.icon);
+        dragging.icon.x = dragging.centerX - dims.width / 2;
+        dragging.icon.y = dragging.centerY - dims.height / 2;
+      }
+      await drawCanvas();
+      e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => {
+      if (dragging) scheduleProjectSave();
+      dragging = null;
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!iconSliderEditing) return;
+      iconSliderEditing = false;
+      endLiveEditSession();
+      drawCanvas();
+    });
+
+    window.addEventListener('touchend', () => {
+      if (!iconSliderEditing) return;
+      iconSliderEditing = false;
+      endLiveEditSession();
+      drawCanvas();
+    }, { passive: true });
+
+    window.addEventListener('keydown', async e => {
+      const tag = document.activeElement && document.activeElement.tagName ? document.activeElement.tagName.toLowerCase() : '';
+      const editingTextField = tag === 'input' || tag === 'textarea';
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        persistProject(false);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        await undo();
+        return;
+      }
+
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        e.preventDefault();
+        await redo();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        await duplicateSelected();
+        return;
+      }
+
+      if (!editingTextField && (e.key === 'Delete' || e.key === 'Backspace')) {
+        if (selectedItem) {
+          e.preventDefault();
+          await deleteSelected();
+        }
+        return;
+      }
+
+      if (!editingTextField && selectedItem && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        const step = e.shiftKey ? 10 : 1;
+        const targetText = getSelectedText();
+        const targetIcon = getSelectedIcon();
+        if (!targetText && !targetIcon) return;
+        pushHistory();
+
+        const moveTarget = targetText || targetIcon;
+        if (targetText) {
+          if (e.key === 'ArrowUp') moveTarget.centerY -= step;
+          if (e.key === 'ArrowDown') moveTarget.centerY += step;
+          if (e.key === 'ArrowLeft') moveTarget.centerX -= step;
+          if (e.key === 'ArrowRight') moveTarget.centerX += step;
+        } else {
+          if (e.key === 'ArrowUp') moveTarget.y -= step;
+          if (e.key === 'ArrowDown') moveTarget.y += step;
+          if (e.key === 'ArrowLeft') moveTarget.x -= step;
+          if (e.key === 'ArrowRight') moveTarget.x += step;
+        }
+        e.preventDefault();
+        await drawCanvas();
+        scheduleProjectSave();
+      }
+    });
+
+    window.addEventListener('pageshow', async () => {
+      const loaded = await loadProject({ silent: true });
+      if (!loaded) {
         document.getElementById('angleInput').value = '0';
         document.getElementById('heightInput').value = '100';
         document.getElementById('widthInput').value = '100';
         document.getElementById('outlineInput').value = '0';
+        document.getElementById('curveInput').value = '0';
+        document.getElementById('curveDirection').value = 'none';
+        document.getElementById('curveSpreadInput').value = '100';
+        await drawCanvas();
       }
-      drawCanvas();
     });
 
+    rebuildIconPalette();
     drawCanvas();
   </script>
 </body>
