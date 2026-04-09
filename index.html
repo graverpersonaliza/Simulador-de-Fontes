@@ -134,7 +134,7 @@
     }
 
     #sizeInput { accent-color: #ea580c; }
-    #angleInput, #heightInput, #widthInput { accent-color: #111; }
+    #angleInput, #heightInput, #widthInput { accent-color: var(--primary); }
     #outlineInput { accent-color: #9333ea; }
     #curveInput { accent-color: #ca8a04; }
     #curveSpreadInput { accent-color: #0f766e; }
@@ -178,12 +178,13 @@
     }
 
     .compact button {
-      padding: 6px 2px;
-      font-size: 0.76rem;
-      line-height: 1.1;
+      padding: 5px 2px;
+      font-size: 0.71rem;
+      line-height: 1.05;
       margin-bottom: 0;
       min-width: 0;
       white-space: nowrap;
+      border-radius: 6px;
     }
 
     #addTextBtn { background: var(--primary); color: #fff; border: none; font-weight: 700; }
@@ -315,7 +316,7 @@
     <label for="textInput">Texto</label>
     <input type="text" id="textInput" placeholder="Digite o nome ou frase" />
     <div class="toolbar-4 compact">
-      <button type="button" id="addTextBtn">Adicionar</button>
+      <button type="button" id="addTextBtn">Add</button>
       <button type="button" id="duplicateTextBtn">Duplicar</button>
       <button type="button" id="centerTextBtn">Centralizar</button>
       <button type="button" id="deleteTextBtn">Excluir</button>
@@ -424,6 +425,7 @@
     <canvas id="designCanvas" width="1000" height="667"></canvas>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
   <script>
     const DESIGN_WIDTH_MM = 150;
     const DESIGN_HEIGHT_MM = 100;
@@ -435,6 +437,28 @@
     const LEGACY_PROJECT_KEYS = ['laser_editor_project_v100', 'laser_fontes_project_auto_v2'];
     const AUTO_SAVE_DELAY = 450;
     const PRESET_ICONS = ['♥','♡','★','☆','●','○','■','□','◆','◇','✦','✧','✿','❀','❁','❋','❈','❖','❣','∞','☀','☾','♪','♫','⚓','✈','☕','☁','❄','⚘','❦','☘︎','♕','♛','✪','✺','✻','✽','✾'];
+
+    const OUTLINE_FONT_URLS = {
+      'Dancing Script': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/dancingscript/DancingScript%5Bwght%5D.ttf',
+      'Great Vibes': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/greatvibes/GreatVibes-Regular.ttf',
+      'Pacifico': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/pacifico/Pacifico-Regular.ttf',
+      'Lobster': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/lobster/Lobster-Regular.ttf',
+      'Allura': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/allura/Allura-Regular.ttf',
+      'Sacramento': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sacramento/Sacramento-Regular.ttf',
+      'Satisfy': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/satisfy/Satisfy-Regular.ttf',
+      'Alex Brush': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/alexbrush/AlexBrush-Regular.ttf',
+      'Courgette': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/courgette/Courgette-Regular.ttf',
+      'Cookie': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cookie/Cookie-Regular.ttf',
+      'Oswald': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/oswald/Oswald%5Bwght%5D.ttf',
+      'Roboto': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/roboto/Roboto%5Bwdth%2Cwght%5D.ttf',
+      'Montserrat': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/montserrat/Montserrat%5Bwght%5D.ttf',
+      'Playfair Display': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf',
+      'Lora': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/lora/Lora%5Bwght%5D.ttf',
+      'Merriweather': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/merriweather/Merriweather-Regular.ttf',
+      'Open Sans': 'https://cdn.jsdelivr.net/gh/google/fonts@main/apache/opensans/OpenSans%5Bwdth%2Cwght%5D.ttf'
+    };
+
+    const outlineFontCache = new Map();
 
     const canvas = document.getElementById('designCanvas');
     const ctx = canvas.getContext('2d');
@@ -1644,6 +1668,69 @@
       document.body.removeChild(link);
     }
 
+    function svgNumber(value) {
+      return Number((Number(value) || 0).toFixed(3));
+    }
+
+    function translateSvgCommands(commands, dx = 0, dy = 0) {
+      return (commands || []).map(cmd => {
+        const next = { ...cmd };
+        if ('x' in next) next.x = svgNumber(next.x + dx);
+        if ('y' in next) next.y = svgNumber(next.y + dy);
+        if ('x1' in next) next.x1 = svgNumber(next.x1 + dx);
+        if ('y1' in next) next.y1 = svgNumber(next.y1 + dy);
+        if ('x2' in next) next.x2 = svgNumber(next.x2 + dx);
+        if ('y2' in next) next.y2 = svgNumber(next.y2 + dy);
+        return next;
+      });
+    }
+
+    function svgCommandsToPathData(commands) {
+      return (commands || []).map(cmd => {
+        switch (cmd.type) {
+          case 'M': return `M ${cmd.x} ${cmd.y}`;
+          case 'L': return `L ${cmd.x} ${cmd.y}`;
+          case 'C': return `C ${cmd.x1} ${cmd.y1} ${cmd.x2} ${cmd.y2} ${cmd.x} ${cmd.y}`;
+          case 'Q': return `Q ${cmd.x1} ${cmd.y1} ${cmd.x} ${cmd.y}`;
+          case 'Z': return 'Z';
+          default: return '';
+        }
+      }).join(' ');
+    }
+
+    function buildPathFromFont(font, text, sizePx) {
+      if (!font || !text) return '';
+      const path = font.getPath(text, 0, 0, sizePx, { kerning: true, features: { liga: true, rlig: true } });
+      const bbox = path.getBoundingBox();
+      const centerX = ((bbox.x1 || 0) + (bbox.x2 || 0)) / 2;
+      const centerY = ((bbox.y1 || 0) + (bbox.y2 || 0)) / 2;
+      const shifted = translateSvgCommands(path.commands, -centerX, -centerY);
+      return svgCommandsToPathData(shifted);
+    }
+
+    function loadOutlineFont(fontName) {
+      if (outlineFontCache.has(fontName)) return outlineFontCache.get(fontName);
+
+      const promise = new Promise(resolve => {
+        if (!window.opentype || !OUTLINE_FONT_URLS[fontName]) {
+          resolve(null);
+          return;
+        }
+
+        window.opentype.load(OUTLINE_FONT_URLS[fontName], (err, font) => {
+          if (err) {
+            console.warn('Não foi possível carregar a fonte para curvas no SVG:', fontName, err);
+            resolve(null);
+            return;
+          }
+          resolve(font || null);
+        });
+      });
+
+      outlineFontCache.set(fontName, promise);
+      return promise;
+    }
+
     function escapeXml(str) {
       return String(str)
         .replace(/&/g, '&amp;')
@@ -1652,13 +1739,37 @@
         .replace(/>/g, '&gt;');
     }
 
-    function buildTextSvg(state) {
+    async function buildTextSvg(state, unsupportedFonts) {
       if (!state.text) return '';
       const sizePx = mmToPx(state.sizeMM);
       const outlinePx = mmToPx(state.outlineMM);
-      const baseAttrs = `font-family="${escapeXml(state.font)}" font-size="${sizePx}" fill="#000" text-anchor="middle" dominant-baseline="middle"`;
-      const strokeAttrs = outlinePx > 0 ? ` stroke="#000" stroke-width="${outlinePx}" paint-order="stroke fill"` : '';
-      const rotate = state.angleDeg ? ` rotate(${state.angleDeg})` : '';
+      const rotate = state.angleDeg ? ` rotate(${svgNumber(state.angleDeg)})` : '';
+      const font = await loadOutlineFont(state.font);
+
+      if (!font) {
+        unsupportedFonts.add(state.font);
+        const baseAttrs = `font-family="${escapeXml(state.font)}" font-size="${sizePx}" fill="#000" text-anchor="middle" dominant-baseline="middle"`;
+        const strokeAttrs = outlinePx > 0 ? ` stroke="#000" stroke-width="${outlinePx}" paint-order="stroke fill"` : '';
+
+        if (state.curve > 0 && state.curveDir !== 'none') {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = 10;
+          tempCanvas.height = 10;
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
+          const glyphs = buildCurvedGlyphs(state.text, tempCtx, state.widthScale, state.heightScale, mmToPx(state.curve), state.curveDir, state.curveSpread);
+          return `<g transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate}">` +
+            glyphs.map(g => {
+              const charRotate = svgNumber(g.rotation * 180 / Math.PI);
+              return `<text ${baseAttrs}${strokeAttrs} transform="translate(${svgNumber(g.x)} ${svgNumber(g.y)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})">${escapeXml(g.char)}</text>`;
+            }).join('') +
+            `</g>`;
+        }
+
+        return `<text ${baseAttrs}${strokeAttrs} transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate} scale(${state.widthScale} ${state.heightScale})">${escapeXml(state.text)}</text>`;
+      }
+
+      const commonAttrs = `fill="#000"${outlinePx > 0 ? ` stroke="#000" stroke-width="${svgNumber(outlinePx)}" paint-order="stroke fill"` : ''}`;
 
       if (state.curve > 0 && state.curveDir !== 'none') {
         const tempCanvas = document.createElement('canvas');
@@ -1667,15 +1778,18 @@
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
         const glyphs = buildCurvedGlyphs(state.text, tempCtx, state.widthScale, state.heightScale, mmToPx(state.curve), state.curveDir, state.curveSpread);
-        return `<g transform="translate(${state.centerX} ${state.centerY})${rotate ? rotate : ''}">` +
-          glyphs.map(g => {
-            const charRotate = (g.rotation * 180 / Math.PI).toFixed(4);
-            return `<text ${baseAttrs}${strokeAttrs} transform="translate(${g.x.toFixed(3)} ${g.y.toFixed(3)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})">${escapeXml(g.char)}</text>`;
-          }).join('') +
-          `</g>`;
+        const parts = glyphs.map(g => {
+          const d = buildPathFromFont(font, g.char, sizePx);
+          if (!d) return '';
+          const charRotate = svgNumber(g.rotation * 180 / Math.PI);
+          return `<path d="${d}" ${commonAttrs} transform="translate(${svgNumber(g.x)} ${svgNumber(g.y)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})"/>`;
+        }).join('');
+        return `<g transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate}">${parts}</g>`;
       }
 
-      return `<text ${baseAttrs}${strokeAttrs} transform="translate(${state.centerX} ${state.centerY})${rotate ? rotate : ''} scale(${state.widthScale} ${state.heightScale})">${escapeXml(state.text)}</text>`;
+      const d = buildPathFromFont(font, state.text, sizePx);
+      if (!d) return '';
+      return `<path d="${d}" ${commonAttrs} transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate} scale(${state.widthScale} ${state.heightScale})"/>`;
     }
 
     function buildIconsSvg() {
@@ -1695,13 +1809,19 @@
       }).join('');
     }
 
-    function saveAsSVG() {
-      const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">\n` +
-        `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>\n` +
-        `  ${texts.map(buildTextSvg).join('\n')}\n` +
-        `  ${buildIconsSvg()}\n` +
-        `</svg>`;
+    async function saveAsSVG() {
+      setProjectStatus('Gerando SVG em curvas...', 'neutral');
+      const unsupportedFonts = new Set();
+      const textSvgParts = await Promise.all(texts.map(text => buildTextSvg(text, unsupportedFonts)));
+      const svgLines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">`,
+        `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>`,
+        ...textSvgParts,
+        `  ${buildIconsSvg()}`,
+        `</svg>`
+      ];
+      const svg = svgLines.join('\n');
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -1710,6 +1830,12 @@
       link.click();
       document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+
+      if (unsupportedFonts.size) {
+        setProjectStatus(`SVG salvo. Fontes sem curva automática: ${Array.from(unsupportedFonts).join(', ')}`, 'error', true);
+      } else {
+        setProjectStatus('SVG salvo com texto convertido em curvas.', 'success', true);
+      }
     }
 
     function bindRangeDefaults(element, defaultValue, snapDistance = 2) {
@@ -1852,8 +1978,7 @@
         pushHistory();
         await drawCanvas();
       } else {
-        const draftValue = document.getElementById('textInput').value.trim();
-        if (draftValue) {
+        if (draftReadyToAdd && document.getElementById('textInput').value.trim()) {
           await addText(p.x, p.y);
           return;
         }
@@ -1991,8 +2116,7 @@
         pushHistory();
         await drawCanvas();
       } else {
-        const draftValue = document.getElementById('textInput').value.trim();
-        if (draftValue) {
+        if (draftReadyToAdd && document.getElementById('textInput').value.trim()) {
           await addText(p.x, p.y);
           return;
         }
