@@ -247,9 +247,7 @@
     .icon-list input[data-rotate] { accent-color: #111; }
 
     .icon-palette {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
+      display: block;
       margin-top: 6px;
       margin-bottom: 12px;
     }
@@ -294,6 +292,30 @@
       margin-top: 8px;
     }
 
+
+    .icon-category {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    .icon-category-title {
+      font-size: .83rem;
+      font-weight: 800;
+      color: #111;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .icon-category-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
     @media (max-width: 900px) {
       :root {
         --panel-width: 230px;
@@ -305,7 +327,7 @@
       .preview { padding: 10px 10px 10px 4px; }
       input, select, button { font-size: 0.9rem; padding: 7px; }
       .compact button { font-size: 0.76rem; padding: 6px 3px; }
-      .icon-palette { grid-template-columns: repeat(4, 1fr); }
+      .icon-category-grid { grid-template-columns: repeat(4, 1fr); }
     }
   </style>
 </head>
@@ -402,10 +424,14 @@
     </div>
     <div id="projectStatus" class="status">Autosave ativo neste aparelho.</div>
 
-    <div class="group-title">Ícones Pretos</div>
+    <div class="group-title">Ícones e Emojis</div>
 
     <label for="iconUpload">Upload de ícones</label>
     <input type="file" id="iconUpload" multiple accept="image/svg+xml,image/png" />
+
+    <label for="iconCategorySelect">Categoria</label>
+    <select id="iconCategorySelect"></select>
+    <div class="hint">Escolha uma categoria para abrir a lista completa.</div>
 
     <div class="icon-palette" id="iconPalette"></div>
     <div class="icon-list" id="iconList"></div>
@@ -426,6 +452,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
+  <script src="https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
   <script>
     const DESIGN_WIDTH_MM = 150;
     const DESIGN_HEIGHT_MM = 100;
@@ -436,7 +463,113 @@
     const PROJECT_KEY = 'laser_editor_project_v200';
     const LEGACY_PROJECT_KEYS = ['laser_editor_project_v100', 'laser_fontes_project_auto_v2'];
     const AUTO_SAVE_DELAY = 450;
-    const PRESET_ICONS = ['♥','♡','★','☆','●','○','■','□','◆','◇','✦','✧','✿','❀','❁','❋','❈','❖','❣','∞','☀','☾','♪','♫','⚓','✈','☕','☁','❄','⚘','❦','☘︎','♕','♛','✪','✺','✻','✽','✾'];
+    const PRESET_ICONS = [
+      { name: 'Coração', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 88C28 72 12 56 12 35c0-12 9-21 20-21 8 0 14 4 18 11 4-7 10-11 18-11 11 0 20 9 20 21 0 21-16 37-38 53Z" fill="#000"/></svg>' },
+      { name: 'Coração Vazado', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 85C29 70 15 56 15 36c0-10 7-18 17-18 8 0 14 4 18 11 4-7 10-11 18-11 10 0 17 8 17 18 0 20-14 34-35 49Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+      { name: 'Coração Duplo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M40 82C21 69 10 57 10 40c0-10 7-18 17-18 7 0 12 3 15 9 3-6 8-9 15-9 10 0 17 8 17 18 0 17-11 29-34 42Z" fill="#000"/><path d="M76 82C57 69 46 57 46 40c0-10 7-18 17-18 7 0 12 3 15 9 3-6 8-9 15-9 10 0 17 8 17 18 0 17-11 29-34 42Z" fill="#000"/></svg>' },
+      { name: 'Coração Brilhando', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M48 86C27 71 12 57 12 35c0-12 9-21 20-21 8 0 14 4 18 11 4-7 10-11 18-11 11 0 20 9 20 21 0 22-15 36-40 51Z" fill="#000"/><path d="M94 10l4 11 11 4-11 4-4 11-4-11-11-4 11-4Zm15 27 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#000"/></svg>' },
+      { name: 'Aliança', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><circle cx="42" cy="56" r="23" fill="none" stroke="#000" stroke-width="10"/><circle cx="78" cy="56" r="23" fill="none" stroke="#000" stroke-width="10"/></svg>' },
+      { name: 'Laço', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M58 50c-8-12-23-20-40-20 3 16 14 30 32 34Zm4 0c8-12 23-20 40-20-3 16-14 30-32 34ZM60 48c-8 0-14 6-14 12s6 12 14 12 14-6 14-12-6-12-14-12Zm-8 24-10 20m26-20 10 20" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Asas', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><path d="M58 68C35 62 18 47 10 20c12 3 22 11 30 23-3-10-2-20 5-29 10 8 15 20 13 35Zm4 0c23-6 40-21 48-48-12 3-22 11-30 23 3-10 2-20-5-29-10 8-15 20-13 35Z" fill="#000"/></svg>' },
+      { name: 'Flecha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path d="M10 30h78M70 14l18 16-18 16M86 30h24" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>' },
+
+      { name: 'Flor', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><circle cx="50" cy="22" r="12"/><circle cx="75" cy="38" r="12"/><circle cx="65" cy="68" r="12"/><circle cx="35" cy="68" r="12"/><circle cx="25" cy="38" r="12"/><circle cx="50" cy="50" r="10"/></g></svg>' },
+      { name: 'Folha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M82 18C37 20 18 50 18 78c29 0 58-19 60-64 0 0-14 18-34 28" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Ramo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20 82c18-28 32-47 60-64" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/><path d="M32 62c-9-2-14-9-15-18 10 0 19 4 24 12m6-10c-7-5-10-13-8-22 9 3 16 10 18 20m8-6c-4-8-4-16 1-24 8 5 12 13 11 22m1 11c5-8 13-13 24-13-1 10-7 18-17 21" fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Trevo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><circle cx="36" cy="34" r="14"/><circle cx="64" cy="34" r="14"/><circle cx="36" cy="62" r="14"/><circle cx="64" cy="62" r="14"/></g><path d="M50 62c0 12 0 20-10 28" stroke="#000" stroke-width="8" stroke-linecap="round" fill="none"/></svg>' },
+      { name: 'Margarida', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><ellipse cx="50" cy="18" rx="8" ry="16"/><ellipse cx="72" cy="28" rx="8" ry="16" transform="rotate(45 72 28)"/><ellipse cx="82" cy="50" rx="8" ry="16" transform="rotate(90 82 50)"/><ellipse cx="72" cy="72" rx="8" ry="16" transform="rotate(135 72 72)"/><ellipse cx="50" cy="82" rx="8" ry="16"/><ellipse cx="28" cy="72" rx="8" ry="16" transform="rotate(45 28 72)"/><ellipse cx="18" cy="50" rx="8" ry="16" transform="rotate(90 18 50)"/><ellipse cx="28" cy="28" rx="8" ry="16" transform="rotate(135 28 28)"/></g><circle cx="50" cy="50" r="11" fill="#000"/></svg>' },
+      { name: 'Tulipa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M32 18c6 1 12 6 18 16 6-10 12-15 18-16 1 12-2 22-9 31h-18c-7-9-10-19-9-31Zm18 31v33m0 0c-6-1-10-5-12-11m12 11c6-1 10-5 12-11" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Pena', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M76 16c-24 8-47 27-54 60 14-8 27-18 38-30-2 7-2 14 1 21" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Borboleta', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M58 46c-7-18-20-28-40-30 1 18 7 33 23 44-11 0-20 4-28 12 18 8 35 8 49-7Zm4 0c7-18 20-28 40-30-1 18-7 33-23 44 11 0 20 4 28 12-18 8-35 8-49-7Z" fill="#000"/><path d="M60 16c-2 8-2 18 0 30 2 12 2 22 0 38" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Borboleta 2', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M60 42C50 24 37 15 18 12c-2 18 4 34 20 46-10 2-17 8-22 18 18 6 34 3 44-14Zm0 0c10-18 23-27 42-30 2 18-4 34-20 46 10 2 17 8 22 18-18 6-34 3-44-14Z" fill="#000"/><path d="M60 16v68" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+
+      { name: 'Estrela', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="m50 8 12 26 28 4-20 19 5 27-25-14-25 14 5-27L10 38l28-4Z" fill="#000"/></svg>' },
+      { name: 'Estrela Vazada', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="m50 12 10 22 24 3-17 16 4 23-21-12-21 12 4-23-17-16 24-3Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+      { name: 'Coroa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="m16 74 12-40 20 18 12-26 12 26 20-18 12 40Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M16 74h88" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Losango', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 12 88 50 50 88 12 50Z" fill="#000"/></svg>' },
+      { name: 'Medalhão', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="32" fill="none" stroke="#000" stroke-width="10"/><circle cx="50" cy="50" r="10" fill="#000"/></svg>' },
+      { name: 'Infinito', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 80"><path d="M14 40c0-14 10-24 24-24 18 0 28 24 32 24s14-24 32-24c14 0 24 10 24 24s-10 24-24 24c-18 0-28-24-32-24S56 64 38 64C24 64 14 54 14 40Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+      { name: 'Arabesco', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80"><path d="M14 40c18 0 22-20 36-20 10 0 16 7 16 15 0 10-8 17-20 17 14 0 20 6 20 16m74-28c-18 0-22-20-36-20-10 0-16 7-16 15 0 10 8 17 20 17-14 0-20 6-20 16" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Brilho', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 8 58 42 92 50 58 58 50 92 42 58 8 50 42 42Z" fill="#000"/></svg>' },
+      { name: 'Roseta', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><circle cx="50" cy="16" r="10"/><circle cx="74" cy="26" r="10"/><circle cx="84" cy="50" r="10"/><circle cx="74" cy="74" r="10"/><circle cx="50" cy="84" r="10"/><circle cx="26" cy="74" r="10"/><circle cx="16" cy="50" r="10"/><circle cx="26" cy="26" r="10"/><circle cx="50" cy="50" r="12"/></g></svg>' },
+      { name: 'Medalha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M34 10h12l4 16H38Zm20 0h12l-4 16H50Z" fill="#000"/><circle cx="50" cy="58" r="24" fill="none" stroke="#000" stroke-width="10"/><path d="m50 42 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z" fill="#000"/></svg>' },
+      { name: 'Escudo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 10 82 22v24c0 21-12 34-32 44C30 80 18 67 18 46V22Z" fill="#000"/></svg>' },
+
+      { name: 'Âncora', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 16a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm0 16v42m-22-8c0 11 10 20 22 20s22-9 22-20m-44 0H16m56 0h12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Cruz', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100"><path d="M40 12v76M18 34h44" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round"/></svg>' },
+      { name: 'Sol', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="18" fill="#000"/><path d="M50 8v18M50 74v18M8 50h18M74 50h18M20 20l13 13M67 67l13 13M80 20 67 33M33 67 20 80" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Lua', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M66 16c-20 5-34 23-34 44 0 16 8 29 21 37-23-1-41-19-41-42 0-25 21-46 46-46 3 0 5 0 8 1Z" fill="#000"/></svg>' },
+      { name: 'Raio', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M58 10 26 54h20L36 90l38-48H54Z" fill="#000"/></svg>' },
+      { name: 'Chama', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M55 12c5 17-8 22-8 36 0 8 5 13 11 13 9 0 14-9 14-18 12 10 16 21 16 31 0 19-15 34-38 34S12 93 12 74c0-20 14-32 25-43 7-7 14-14 18-19Z" fill="#000"/></svg>' },
+      { name: 'Pomba', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M20 64c22 2 40-6 54-22-2 10 0 20 7 29-15 7-31 10-51 8l10 9H14l10-24Z" fill="#000"/><path d="M44 38c11-15 27-22 49-22-4 10-11 18-22 22l17 7-20 2" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Bigode', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path d="M14 34c10-14 24-19 42-14 4 1 7 4 10 8 3-4 6-7 10-8 18-5 32 0 42 14-9 3-17 7-24 15-8 8-18 8-28-4-10 12-20 12-28 4-7-8-15-12-24-15Z" fill="#000"/></svg>' },
+      { name: 'Balão Fala', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M18 20h64c6 0 10 4 10 10v28c0 6-4 10-10 10H48L30 86V68H18c-6 0-10-4-10-10V30c0-6 4-10 10-10Z" fill="#000"/></svg>' },
+      { name: 'Mensagem', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M18 18h64c6 0 10 4 10 10v36c0 6-4 10-10 10H42L22 88l4-14H18c-6 0-10-4-10-10V28c0-6 4-10 10-10Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+      { name: 'Telefone', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M31 15h15l5 18-9 8c7 12 16 21 28 28l8-9 18 5v15c0 6-5 11-11 11C41 91 9 59 9 20c0-6 5-11 11-11h11Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+      { name: 'Câmera', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 80"><path d="M16 24h18l6-8h30l6 8h18c6 0 10 4 10 10v24c0 6-4 10-10 10H16c-6 0-10-4-10-10V34c0-6 4-10 10-10Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="55" cy="46" r="14" fill="none" stroke="#000" stroke-width="8"/></svg>' },
+      { name: 'Presente', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M14 36h72v50H14Zm0 0h72M50 36v50M24 18c0 8 8 14 18 14h8V18H42c-10 0-18 6-18 14Zm52 0c0 8-8 14-18 14h-8V18h8c10 0 18 6 18 14Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+      { name: 'Confete', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M18 78 44 22l34 34Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M50 24 66 8M70 38l20-4M34 52 16 40M64 64l12 16M44 70l-4 20" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Foguete', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><path d="M56 10c16 9 24 25 24 48L64 74l-18-18C46 35 49 20 56 10Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="60" cy="38" r="7" fill="#000"/><path d="M46 56 26 64l10-20m28 30 8 22 10-10-12-12M42 70l-16 16 22-8" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Check', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 70"><path d="M12 38 32 58 78 12" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Check Duplo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 70"><path d="M10 40 28 58 56 24M42 40 60 58 108 12" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+
+      { name: 'Nota Musical', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M58 16v44c0 10-7 18-18 18-8 0-14-5-14-12s6-12 14-12c4 0 7 1 10 3V28l26-6v34c0 10-7 18-18 18-8 0-14-5-14-12s6-12 14-12c4 0 7 1 10 3V22Z" fill="#000"/></svg>' },
+      { name: 'Clave de Sol', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 140"><path d="M48 14c-12 0-22 9-22 20 0 8 6 15 14 15 6 0 11-5 11-11 0-6-4-10-10-10-3 0-5 1-7 3 2-10 12-17 24-17 14 0 24 10 24 24 0 21-18 30-32 40-12 8-21 18-21 31 0 12 10 21 23 21 14 0 24-9 24-22 0-10-7-17-16-17-8 0-14 5-14 13 0 7 5 12 12 12 1 0 3 0 4-1-2 4-7 7-12 7-9 0-16-6-16-15 0-10 8-19 22-28 18-12 38-23 38-47C90 27 72 14 48 14ZM41 6v128" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+
+      { name: 'Pata', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><ellipse cx="28" cy="30" rx="9" ry="13"/><ellipse cx="48" cy="22" rx="9" ry="13"/><ellipse cx="68" cy="30" rx="9" ry="13"/><ellipse cx="80" cy="50" rx="9" ry="13"/><path d="M30 70c0-12 10-22 22-22 16 0 28 11 28 26 0 9-8 14-18 14-7 0-10-3-16-3-6 0-10 3-16 3-11 0-18-7-18-18 0-9 8-17 18-17 0 0 0 0 0 0Z"/></g></svg>' },
+      { name: 'Pegadas Bebê', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><g fill="#000"><ellipse cx="36" cy="52" rx="14" ry="22" transform="rotate(-18 36 52)"/><ellipse cx="26" cy="20" rx="5" ry="7"/><ellipse cx="36" cy="14" rx="5" ry="7"/><ellipse cx="48" cy="16" rx="5" ry="7"/><ellipse cx="56" cy="24" rx="5" ry="7"/><ellipse cx="82" cy="58" rx="14" ry="22" transform="rotate(18 82 58)"/><ellipse cx="70" cy="28" rx="5" ry="7"/><ellipse cx="82" cy="20" rx="5" ry="7"/><ellipse cx="94" cy="22" rx="5" ry="7"/><ellipse cx="102" cy="30" rx="5" ry="7"/></g></svg>' },
+      { name: 'Ursinho', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="28" cy="24" r="12" fill="#000"/><circle cx="72" cy="24" r="12" fill="#000"/><circle cx="50" cy="54" r="30" fill="#000"/><circle cx="38" cy="48" r="4" fill="#fff"/><circle cx="62" cy="48" r="4" fill="#fff"/><ellipse cx="50" cy="64" rx="10" ry="8" fill="#fff"/><circle cx="50" cy="61" r="4" fill="#000"/><path d="M44 70c3 4 5 5 6 5s3-1 6-5" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/></svg>' },
+
+      { name: 'Joinha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M46 44V18c0-5 4-9 9-9 4 0 8 3 9 8l4 24h12c8 0 13 8 10 16l-9 24c-2 5-7 9-12 9H34c-6 0-10-4-10-10V44Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M18 42h16v46H18Z" fill="#000"/></svg>' },
+      { name: 'Mãos Oração', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M44 12c6 7 10 16 12 28 1 5 1 13 0 24l-10 22-18-8 10-23c-1-10-1-20 1-30 1-6 3-10 5-13Zm12 40c-1-10-1-20 1-30 1-6 3-10 5-13 6 7 10 16 12 28 1 5 1 13 0 24l10 23-18 8-10-22c-1-11-1-19 0-24Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
+
+      { name: 'Carinha Feliz', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M32 58c6 10 13 14 18 14s12-4 18-14" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Piscando', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M30 40h12" stroke="#000" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M32 60c6 8 13 12 18 12s12-4 18-12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Beijo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M44 61c4-6 8-6 12 0-4 6-8 6-12 0Z" fill="#000"/></svg>' },
+      { name: 'Carinha Apaixonada', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M31 36c0-4 3-7 7-7 3 0 5 1 6 4 1-3 3-4 6-4 4 0 7 3 7 7 0 7-5 11-12 17-7-6-14-10-14-17Zm30 0c0-4 3-7 7-7 3 0 5 1 6 4 1-3 3-4 6-4 4 0 7 3 7 7 0 7-5 11-12 17-7-6-14-10-14-17Z" fill="#000"/><path d="M32 62c6 8 13 12 18 12s12-4 18-12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Óculos', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M24 39h15a8 8 0 0 1 8 8v3a8 8 0 0 1-8 8H29a8 8 0 0 1-8-8v-3a8 8 0 0 1 3-6Zm37 0h15a8 8 0 0 1 8 8v3a8 8 0 0 1-8 8H66a8 8 0 0 1-8-8v-3a8 8 0 0 1 3-6ZM47 47h11" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M33 69c6 6 12 9 17 9s11-3 17-9" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Rindo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M28 39c5 6 10 8 16 8s11-2 16-8m-32 0c5 6 10 8 16 8s11-2 16-8" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/><path d="M30 60h40c-3 12-12 18-20 18s-17-6-20-18Z" fill="#000"/></svg>' },
+      { name: 'Carinha Surpresa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="38" r="5" fill="#000"/><circle cx="64" cy="38" r="5" fill="#000"/><ellipse cx="50" cy="64" rx="8" ry="10" fill="none" stroke="#000" stroke-width="8"/></svg>' }
+
+    ];
+
+    const PRESET_ICON_CATEGORIES = [
+      {
+        title: 'Mais usados no WhatsApp',
+        names: ['Coração','Coração Duplo','Coração Brilhando','Brilho','Carinha Feliz','Carinha Beijo','Carinha Apaixonada','Joinha','Mãos Oração','Chama','Foguete','Presente','Confete','Mensagem','Check','Check Duplo']
+      },
+      {
+        title: 'Amor e Casamento',
+        names: ['Coração','Coração Vazado','Coração Duplo','Coração Brilhando','Aliança','Laço','Asas','Flecha']
+      },
+      {
+        title: 'Floral e Natureza',
+        names: ['Flor','Folha','Ramo','Trevo','Margarida','Tulipa','Pena','Borboleta','Borboleta 2']
+      },
+      {
+        title: 'Luxo e Ornamentos',
+        names: ['Estrela','Estrela Vazada','Coroa','Losango','Medalhão','Infinito','Arabesco','Brilho','Roseta','Medalha','Escudo']
+      },
+      {
+        title: 'Símbolos e Elementos',
+        names: ['Âncora','Cruz','Sol','Lua','Raio','Chama','Pomba','Bigode','Balão Fala','Mensagem','Telefone','Câmera','Presente','Confete','Foguete','Check','Check Duplo']
+      },
+      {
+        title: 'Música e Arte',
+        names: ['Nota Musical','Clave de Sol']
+      },
+      {
+        title: 'Pets e Infantil',
+        names: ['Pata','Pegadas Bebê','Ursinho']
+      },
+      {
+        title: 'Emojis',
+        names: ['Carinha Feliz','Carinha Piscando','Carinha Beijo','Carinha Apaixonada','Carinha Óculos','Carinha Rindo','Carinha Surpresa','Joinha','Mãos Oração']
+      }
+    ];
+
+    const PRESET_ICON_LOOKUP = new Map(PRESET_ICONS.map(item => [item.name, item]));
+
 
     const OUTLINE_FONT_URLS = {
       'Dancing Script': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/dancingscript/DancingScript%5Bwght%5D.ttf',
@@ -464,6 +597,7 @@
     const ctx = canvas.getContext('2d');
     const iconList = document.getElementById('iconList');
     const iconPalette = document.getElementById('iconPalette');
+    const iconCategorySelect = document.getElementById('iconCategorySelect');
     const selectedInfo = document.getElementById('selectedInfo');
     const projectStatus = document.getElementById('projectStatus');
 
@@ -481,6 +615,7 @@
     let saveTimer = null;
     let liveEditSession = false;
     let statusTimer = null;
+    let currentIconCategory = 'Mais usados no WhatsApp';
 
     function mmToPx(mm) { return mm * PX_PER_MM; }
     function pxToMm(px) { return px * MM_PER_PX; }
@@ -502,6 +637,7 @@
     function serializeIcons() {
       return icons.map(icon => ({
         id: icon.id,
+        name: icon.name || null,
         char: icon.char || null,
         x: icon.x,
         y: icon.y,
@@ -537,6 +673,7 @@
       for (const icon of restoredIcons) {
         const baseIcon = {
           id: icon.id || nextIconId++,
+          name: icon.name || null,
           char: icon.char || null,
           x: Number(icon.x) || 100,
           y: Number(icon.y) || 100,
@@ -706,7 +843,7 @@
       }
       const selectedIcon = getSelectedIcon();
       if (selectedIcon) {
-        const label = selectedIcon.char ? `Ícone ${selectedIcon.char}` : 'Ícone';
+        const label = selectedIcon.name || (selectedIcon.char ? `Ícone ${selectedIcon.char}` : 'Ícone');
         selectedInfo.textContent = `Selecionado: ${label}`;
         return;
       }
@@ -1197,27 +1334,117 @@
       selected.curveSpread = s.curveSpread;
     }
 
+    async function createSvgIconObject(svgText, label, x = 100, y = 100, size = 64) {
+      return await new Promise((resolve, reject) => {
+        const blob = new Blob([svgText], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const icon = {
+            id: nextIconId++,
+            name: label || 'Ícone',
+            img,
+            loaded: true,
+            x,
+            y,
+            size,
+            angle: 0,
+            originalSvg: svgText,
+            srcData: null,
+            naturalWidth: img.naturalWidth || size,
+            naturalHeight: img.naturalHeight || size
+          };
+          URL.revokeObjectURL(url);
+          resolve(icon);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error('Falha ao carregar SVG.'));
+        };
+        img.src = url;
+      });
+    }
+
+    async function addPresetIcon(preset, presetIndex) {
+      try {
+        pushHistory();
+        const idx = icons.length;
+        const col = idx % 4;
+        const row = Math.floor(idx / 4);
+        const baseX = 40 + col * 72;
+        const baseY = 40 + row * 72;
+        const largerNames = new Set(['Coração','Coração Duplo','Estrela','Coroa','Borboleta','Flor','Asas','Pomba']);
+        const startSize = largerNames.has(preset.name) ? 74 : 66;
+        const icon = await createSvgIconObject(preset.svg, preset.name, baseX, baseY, startSize);
+        icons.push(icon);
+        draftReadyToAdd = false;
+        selectItem('icon', icon.id);
+        await drawCanvas();
+        scheduleProjectSave();
+      } catch (err) {
+        console.warn(err);
+        setProjectStatus('Falha ao adicionar ícone vetorial.', 'error', true);
+      }
+    }
+
+    function createPresetButton(preset, presetIndex) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.title = `Adicionar ${preset.name}`;
+      btn.setAttribute('aria-label', preset.name);
+      btn.innerHTML = preset.svg.replace('<svg ', '<svg width="24" height="24" ');
+      btn.addEventListener('click', () => addPresetIcon(preset, presetIndex));
+      return btn;
+    }
+
+    function setupIconCategorySelect() {
+      if (!iconCategorySelect) return;
+      iconCategorySelect.innerHTML = '';
+      PRESET_ICON_CATEGORIES.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.title;
+        option.textContent = category.title;
+        iconCategorySelect.appendChild(option);
+      });
+
+      const hasCurrent = PRESET_ICON_CATEGORIES.some(category => category.title === currentIconCategory);
+      currentIconCategory = hasCurrent ? currentIconCategory : (PRESET_ICON_CATEGORIES[0]?.title || '');
+      iconCategorySelect.value = currentIconCategory;
+
+      if (!iconCategorySelect.dataset.bound) {
+        iconCategorySelect.addEventListener('change', () => {
+          currentIconCategory = iconCategorySelect.value;
+          rebuildIconPalette();
+        });
+        iconCategorySelect.dataset.bound = '1';
+      }
+    }
+
     function rebuildIconPalette() {
       iconPalette.innerHTML = '';
-      PRESET_ICONS.forEach(char => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = char;
-        btn.title = `Adicionar ${char}`;
-        btn.addEventListener('click', async () => {
-          pushHistory();
-          const idx = icons.length;
-          const col = idx % 4;
-          const row = Math.floor(idx / 4);
-          const icon = { id: nextIconId++, char, x: 60 + col * 60, y: 70 + row * 60, size: 32, angle: 0 };
-          icons.push(icon);
-          draftReadyToAdd = false;
-          selectItem('icon', icon.id);
-          await drawCanvas();
-          scheduleProjectSave();
-        });
-        iconPalette.appendChild(btn);
+      const selectedCategory = PRESET_ICON_CATEGORIES.find(category => category.title === currentIconCategory) || PRESET_ICON_CATEGORIES[0];
+      if (!selectedCategory) return;
+
+      const section = document.createElement('div');
+      section.className = 'icon-category';
+
+      const title = document.createElement('div');
+      title.className = 'icon-category-title';
+      title.textContent = selectedCategory.title;
+      section.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'icon-category-grid';
+
+      selectedCategory.names.forEach(name => {
+        const preset = PRESET_ICON_LOOKUP.get(name);
+        if (!preset) return;
+        const presetIndex = PRESET_ICONS.findIndex(item => item.name === name);
+        grid.appendChild(createPresetButton(preset, presetIndex));
       });
+
+      section.appendChild(grid);
+      iconPalette.appendChild(section);
     }
 
     function rebuildIconControls() {
@@ -1227,7 +1454,7 @@
         if (selectedItem && selectedItem.type === 'icon' && selectedItem.id === icon.id) wrapper.classList.add('selected-layer');
 
         wrapper.innerHTML = `
-          <div style="font-size:18px; margin-bottom:6px; color:#111;">${icon.char || '🖼️ Ícone'}</div>
+          <div style="font-size:18px; margin-bottom:6px; color:#111;">${icon.name || icon.char || '🖼️ Ícone'}</div>
           <label style="font-size:0.88rem; margin-bottom:4px; color:#111;">Tamanho</label>
           <input type="range" class="icon-size-slider" min="10" max="220" value="${Math.round(icon.size)}" data-size="${index}">
           <label style="font-size:0.88rem; margin-bottom:4px; color:#111;">Rotação</label>
@@ -1563,9 +1790,9 @@
       return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
     }
 
-    async function addIconChar(char, x = 100, y = 100, size = 32) {
+    async function addIconChar(char, x = 100, y = 100, size = 56) {
       pushHistory();
-      const icon = { id: nextIconId++, char, x, y, size, angle: 0 };
+      const icon = { id: nextIconId++, name: `Ícone ${char}`, char, x, y, size, angle: 0 };
       icons.push(icon);
       draftReadyToAdd = false;
       selectItem('icon', icon.id);
@@ -1590,12 +1817,13 @@
               loaded: true,
               x: 100,
               y: 100,
-              size: 40,
+              size: 64,
               angle: 0,
+              name: file.name.replace(/\.svg$/i, ''),
               originalSvg: svgText,
               srcData: null,
-              naturalWidth: img.naturalWidth || 40,
-              naturalHeight: img.naturalHeight || 40
+              naturalWidth: img.naturalWidth || 64,
+              naturalHeight: img.naturalHeight || 64
             };
             icons.push(icon);
             selectItem('icon', icon.id);
@@ -1626,8 +1854,9 @@
             loaded: true,
             x: 100,
             y: 100,
-            size: 40,
+            size: 64,
             angle: 0,
+            name: file.name.replace(/\.[^.]+$/, ''),
             srcData: off.toDataURL('image/png'),
             naturalWidth: off.width,
             naturalHeight: off.height
@@ -1739,17 +1968,149 @@
         .replace(/>/g, '&gt;');
     }
 
-    async function buildTextSvg(state, unsupportedFonts) {
+    function extractSvgBody(svgString) {
+      const match = String(svgString || '').match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+      return match ? match[1] : '';
+    }
+
+    function normalizeTracedSvgBody(svgBody) {
+      let body = String(svgBody || '');
+      body = body.replace(/<\/?desc[^>]*>/gi, '');
+      body = body.replace(/<rect\b[\s\S]*?\/>/gi, '');
+      body = body.replace(/<path\b(?=[^>]*\bfill=(?:"|')(?:rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)|#fff(?:fff)?|white)(?:"|'))[\s\S]*?\/>/gi, '');
+      body = body.replace(/<path\b(?=[^>]*\bfill=(?:"|')none(?:"|'))(?=[^>]*\bstroke=(?:"|')(?:rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)|#fff(?:fff)?|white)(?:"|'))[\s\S]*?\/>/gi, '');
+      body = body.replace(/fill=("|')(?!none\1)[^"']*\1/gi, 'fill="#000"');
+      body = body.replace(/stroke=("|')(?!none\1)[^"']*\1/gi, 'stroke="#000"');
+      body = body.replace(/\sdata-name=("|')[^"']*\1/gi, '');
+      return body.trim();
+    }
+
+    function normalizeSourceSvgBody(svgBody) {
+      let body = String(svgBody || '');
+      body = body.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+      body = body.replace(/<foreignObject\b[\s\S]*?<\/foreignObject>/gi, '');
+      body = body.replace(/<\/?desc[^>]*>/gi, '');
+      body = body.replace(/\s(on\w+)=("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+      body = body.replace(/fill=("|')(?!none\1)[^"']*\1/gi, 'fill="#000"');
+      body = body.replace(/stroke=("|')(?!none\1)[^"']*\1/gi, 'stroke="#000"');
+      body = body.replace(/\sdata-name=("|')[^"']*\1/gi, '');
+      return body.trim();
+    }
+
+    function parseOriginalSvgMeta(svgText, icon) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(String(svgText || ''), 'image/svg+xml');
+        const svgEl = doc.documentElement;
+        if (!svgEl || String(svgEl.nodeName).toLowerCase() !== 'svg') return null;
+
+        let minX = 0, minY = 0;
+        let width = parseFloat(svgEl.getAttribute('width'));
+        let height = parseFloat(svgEl.getAttribute('height'));
+        const viewBox = svgEl.getAttribute('viewBox');
+
+        if (viewBox) {
+          const nums = viewBox.trim().replace(/,/g, ' ').split(/\s+/).map(Number).filter(v => !Number.isNaN(v));
+          if (nums.length === 4) {
+            [minX, minY, width, height] = nums;
+          }
+        }
+
+        if (!(width > 0)) width = icon.naturalWidth || 100;
+        if (!(height > 0)) height = icon.naturalHeight || 100;
+
+        const body = normalizeSourceSvgBody(extractSvgBody(String(svgText || '')));
+        if (!body) return null;
+
+        return { minX, minY, width, height, body };
+      } catch (err) {
+        console.warn('Falha ao interpretar SVG original do ícone:', err);
+        return null;
+      }
+    }
+
+    function buildOriginalVectorIconSvg(icon) {
+      if (!icon.originalSvg) return '';
+      const dims = getIconDimensions(icon);
+      const meta = parseOriginalSvgMeta(icon.originalSvg, icon);
+      if (!meta || !(meta.width > 0) || !(meta.height > 0) || !meta.body) return '';
+
+      const centerX = svgNumber(icon.x + dims.width / 2);
+      const centerY = svgNumber(icon.y + dims.height / 2);
+      const rotate = icon.angle ? ` rotate(${svgNumber(icon.angle)})` : '';
+      const scaleX = svgNumber(dims.width / meta.width);
+      const scaleY = svgNumber(dims.height / meta.height);
+      const offsetX = svgNumber(-dims.width / 2);
+      const offsetY = svgNumber(-dims.height / 2);
+      const viewShiftX = svgNumber(-meta.minX);
+      const viewShiftY = svgNumber(-meta.minY);
+
+      return `<g transform="translate(${centerX} ${centerY})${rotate}">` +
+        `<g transform="translate(${offsetX} ${offsetY}) scale(${scaleX} ${scaleY}) translate(${viewShiftX} ${viewShiftY})">` +
+        meta.body +
+        `</g>` +
+        `</g>`;
+    }
+
+    async function buildTracedTextSvg(state) {
+      if (!state.text || !window.ImageTracer) return '';
+
+      const baseState = { ...state, angleDeg: 0 };
+      const sizePx = mmToPx(state.sizeMM);
+      await loadFont(state.font, sizePx);
+
+      const bounds = computeSelectionBounds(baseState);
+      const pad = Math.max(12, Math.ceil(sizePx * 0.2) + Math.ceil(mmToPx(state.outlineMM)) + 4);
+      const width = Math.max(8, Math.ceil((bounds.maxX - bounds.minX) + pad * 2 + 2));
+      const height = Math.max(8, Math.ceil((bounds.maxY - bounds.minY) + pad * 2 + 2));
+      const localCenterX = svgNumber(-bounds.minX + pad + 1);
+      const localCenterY = svgNumber(-bounds.minY + pad + 1);
+
+      const traceCanvas = document.createElement('canvas');
+      traceCanvas.width = width;
+      traceCanvas.height = height;
+      const traceCtx = traceCanvas.getContext('2d', { willReadFrequently: true });
+      traceCtx.clearRect(0, 0, width, height);
+      renderText(traceCtx, { ...baseState, centerX: localCenterX, centerY: localCenterY }, false);
+
+      const imgd = traceCtx.getImageData(0, 0, width, height);
+      const tracedSvg = window.ImageTracer.imagedataToSVG(imgd, {
+        ltres: 0.35,
+        qtres: 0.35,
+        pathomit: 0,
+        rightangleenhance: false,
+        colorsampling: 0,
+        numberofcolors: 2,
+        mincolorratio: 0,
+        colorquantcycles: 1,
+        scale: 1,
+        strokewidth: 0,
+        linefilter: false,
+        desc: false,
+        viewbox: true
+      });
+
+      let body = normalizeTracedSvgBody(extractSvgBody(tracedSvg));
+      if (!body) return '';
+
+      const dx = svgNumber(state.centerX - localCenterX);
+      const dy = svgNumber(state.centerY - localCenterY);
+      const rotateGroup = state.angleDeg
+        ? `<g transform="rotate(${svgNumber(state.angleDeg)} ${localCenterX} ${localCenterY})">${body}</g>`
+        : body;
+
+      return `<g transform="translate(${dx} ${dy})">${rotateGroup}</g>`;
+    }
+
+    async function buildTextSvg(state) {
       if (!state.text) return '';
       const sizePx = mmToPx(state.sizeMM);
       const outlinePx = mmToPx(state.outlineMM);
       const rotate = state.angleDeg ? ` rotate(${svgNumber(state.angleDeg)})` : '';
       const font = await loadOutlineFont(state.font);
 
-      if (!font) {
-        unsupportedFonts.add(state.font);
-        const baseAttrs = `font-family="${escapeXml(state.font)}" font-size="${sizePx}" fill="#000" text-anchor="middle" dominant-baseline="middle"`;
-        const strokeAttrs = outlinePx > 0 ? ` stroke="#000" stroke-width="${outlinePx}" paint-order="stroke fill"` : '';
+      if (font) {
+        const commonAttrs = `fill="#000"${outlinePx > 0 ? ` stroke="#000" stroke-width="${svgNumber(outlinePx)}" paint-order="stroke fill"` : ''}`;
 
         if (state.curve > 0 && state.curveDir !== 'none') {
           const tempCanvas = document.createElement('canvas');
@@ -1758,18 +2119,28 @@
           const tempCtx = tempCanvas.getContext('2d');
           tempCtx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
           const glyphs = buildCurvedGlyphs(state.text, tempCtx, state.widthScale, state.heightScale, mmToPx(state.curve), state.curveDir, state.curveSpread);
-          return `<g transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate}">` +
-            glyphs.map(g => {
-              const charRotate = svgNumber(g.rotation * 180 / Math.PI);
-              return `<text ${baseAttrs}${strokeAttrs} transform="translate(${svgNumber(g.x)} ${svgNumber(g.y)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})">${escapeXml(g.char)}</text>`;
-            }).join('') +
-            `</g>`;
+          const parts = glyphs.map(g => {
+            const d = buildPathFromFont(font, g.char, sizePx);
+            if (!d) return '';
+            const charRotate = svgNumber(g.rotation * 180 / Math.PI);
+            return `<path d="${d}" ${commonAttrs} transform="translate(${svgNumber(g.x)} ${svgNumber(g.y)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})"/>`;
+          }).join('');
+          if (parts) {
+            return `<g transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate}">${parts}</g>`;
+          }
+        } else {
+          const d = buildPathFromFont(font, state.text, sizePx);
+          if (d) {
+            return `<path d="${d}" ${commonAttrs} transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate} scale(${state.widthScale} ${state.heightScale})"/>`;
+          }
         }
-
-        return `<text ${baseAttrs}${strokeAttrs} transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate} scale(${state.widthScale} ${state.heightScale})">${escapeXml(state.text)}</text>`;
       }
 
-      const commonAttrs = `fill="#000"${outlinePx > 0 ? ` stroke="#000" stroke-width="${svgNumber(outlinePx)}" paint-order="stroke fill"` : ''}`;
+      const traced = await buildTracedTextSvg(state);
+      if (traced) return traced;
+
+      const baseAttrs = `font-family="${escapeXml(state.font)}" font-size="${sizePx}" fill="#000" text-anchor="middle" dominant-baseline="middle"`;
+      const strokeAttrs = outlinePx > 0 ? ` stroke="#000" stroke-width="${outlinePx}" paint-order="stroke fill"` : '';
 
       if (state.curve > 0 && state.curveDir !== 'none') {
         const tempCanvas = document.createElement('canvas');
@@ -1778,47 +2149,117 @@
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `${sizePx}px "${state.font}", Arial, sans-serif`;
         const glyphs = buildCurvedGlyphs(state.text, tempCtx, state.widthScale, state.heightScale, mmToPx(state.curve), state.curveDir, state.curveSpread);
-        const parts = glyphs.map(g => {
-          const d = buildPathFromFont(font, g.char, sizePx);
-          if (!d) return '';
-          const charRotate = svgNumber(g.rotation * 180 / Math.PI);
-          return `<path d="${d}" ${commonAttrs} transform="translate(${svgNumber(g.x)} ${svgNumber(g.y)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})"/>`;
-        }).join('');
-        return `<g transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate}">${parts}</g>`;
+        return `<g transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate}">` +
+          glyphs.map(g => {
+            const charRotate = svgNumber(g.rotation * 180 / Math.PI);
+            return `<text ${baseAttrs}${strokeAttrs} transform="translate(${svgNumber(g.x)} ${svgNumber(g.y)}) rotate(${charRotate}) scale(${state.widthScale} ${state.heightScale})">${escapeXml(g.char)}</text>`;
+          }).join('') +
+          `</g>`;
       }
 
-      const d = buildPathFromFont(font, state.text, sizePx);
-      if (!d) return '';
-      return `<path d="${d}" ${commonAttrs} transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate} scale(${state.widthScale} ${state.heightScale})"/>`;
+      return `<text ${baseAttrs}${strokeAttrs} transform="translate(${svgNumber(state.centerX)} ${svgNumber(state.centerY)})${rotate} scale(${state.widthScale} ${state.heightScale})">${escapeXml(state.text)}</text>`;
     }
 
-    function buildIconsSvg() {
-      return icons.map(icon => {
+    async function buildIconSvg(icon) {
+      if (icon.originalSvg) {
+        const preserved = buildOriginalVectorIconSvg(icon);
+        if (preserved) return preserved;
+      }
+
+      if (!window.ImageTracer) {
         const dims = getIconDimensions(icon);
-        const centerX = icon.x + dims.width / 2;
-        const centerY = icon.y + dims.height / 2;
-
-        if (icon.loaded && icon.img) {
-          const offscreen = getBlackRenderCanvas(icon, dims.width, dims.height);
-          const href = offscreen.toDataURL('image/png');
-          const transform = icon.angle ? ` transform="rotate(${icon.angle} ${centerX} ${centerY})"` : '';
-          return `<image x="${icon.x}" y="${icon.y}" width="${dims.width}" height="${dims.height}" href="${href}"${transform} />`;
+        const centerX = svgNumber(icon.x + dims.width / 2);
+        const centerY = svgNumber(icon.y + dims.height / 2);
+        const rotate = icon.angle ? ` rotate(${svgNumber(icon.angle)})` : '';
+        if (icon.char) {
+          return `<g transform="translate(${centerX} ${centerY})${rotate}">` +
+            `<text x="0" y="0" font-family="Segoe UI Symbol, Noto Sans Symbols 2, Arial Unicode MS, sans-serif" font-size="${svgNumber(icon.size)}" fill="#000" text-anchor="middle" dominant-baseline="middle">${escapeXml(icon.char || '')}</text>` +
+            `</g>`;
         }
+        return '';
+      }
 
-        return `<text x="${centerX}" y="${centerY}" font-family="Segoe UI Symbol, Noto Sans Symbols 2, Arial Unicode MS, sans-serif" font-size="${icon.size}" fill="#000" text-anchor="middle" dominant-baseline="middle"${icon.angle ? ` transform="rotate(${icon.angle} ${centerX} ${centerY})"` : ''}>${escapeXml(icon.char || '')}</text>`;
-      }).join('');
+      const dims = getIconDimensions(icon);
+      const bounds = getIconBounds(icon);
+      const pad = Math.max(10, Math.ceil(Math.max(dims.width, dims.height) * 0.15));
+      const baseWidth = Math.max(8, Math.ceil((bounds.maxX - bounds.minX) + pad * 2 + 2));
+      const baseHeight = Math.max(8, Math.ceil((bounds.maxY - bounds.minY) + pad * 2 + 2));
+      const localCenterX = svgNumber(-bounds.minX + pad + 1);
+      const localCenterY = svgNumber(-bounds.minY + pad + 1);
+      const globalCenterX = svgNumber(icon.x + dims.width / 2);
+      const globalCenterY = svgNumber(icon.y + dims.height / 2);
+
+      const traceScale = icon.loaded && icon.img ? 4 : 2;
+      const width = Math.max(8, Math.ceil(baseWidth * traceScale));
+      const height = Math.max(8, Math.ceil(baseHeight * traceScale));
+      const localCenterXScaled = svgNumber(localCenterX * traceScale);
+      const localCenterYScaled = svgNumber(localCenterY * traceScale);
+
+      const traceCanvas = document.createElement('canvas');
+      traceCanvas.width = width;
+      traceCanvas.height = height;
+      const traceCtx = traceCanvas.getContext('2d', { willReadFrequently: true });
+      traceCtx.clearRect(0, 0, width, height);
+      traceCtx.fillStyle = '#fff';
+      traceCtx.fillRect(0, 0, width, height);
+      traceCtx.save();
+      traceCtx.translate(localCenterXScaled, localCenterYScaled);
+      if (icon.loaded && icon.img) {
+        const traceDims = { width: dims.width * traceScale, height: dims.height * traceScale };
+        renderLoadedIcon(traceCtx, icon, traceDims);
+      } else if (icon.char) {
+        traceCtx.font = `${icon.size * traceScale}px "Segoe UI Symbol","Noto Sans Symbols 2","Arial Unicode MS",sans-serif`;
+        traceCtx.fillStyle = '#000';
+        traceCtx.textAlign = 'center';
+        traceCtx.textBaseline = 'middle';
+        traceCtx.fillText(icon.char, 0, 0);
+      }
+      traceCtx.restore();
+
+      const imgd = traceCtx.getImageData(0, 0, width, height);
+      const tracedSvg = window.ImageTracer.imagedataToSVG(imgd, {
+        ltres: 1.2,
+        qtres: 1.4,
+        pathomit: 2,
+        rightangleenhance: false,
+        colorsampling: 0,
+        numberofcolors: 2,
+        mincolorratio: 0,
+        colorquantcycles: 1,
+        scale: 1,
+        strokewidth: 0,
+        linefilter: true,
+        desc: false,
+        viewbox: true
+      });
+
+      let body = normalizeTracedSvgBody(extractSvgBody(tracedSvg));
+      if (!body) return '';
+
+      const rotateGroup = icon.angle
+        ? `<g transform="rotate(${svgNumber(icon.angle)} ${localCenterXScaled} ${localCenterYScaled})">${body}</g>`
+        : body;
+      const dx = svgNumber(globalCenterX - localCenterX);
+      const dy = svgNumber(globalCenterY - localCenterY);
+      const downScale = svgNumber(1 / traceScale);
+      return `<g transform="translate(${dx} ${dy}) scale(${downScale})">${rotateGroup}</g>`;
+    }
+
+    async function buildIconsSvg() {
+      const parts = await Promise.all(icons.map(icon => buildIconSvg(icon)));
+      return parts.join('');
     }
 
     async function saveAsSVG() {
       setProjectStatus('Gerando SVG em curvas...', 'neutral');
-      const unsupportedFonts = new Set();
-      const textSvgParts = await Promise.all(texts.map(text => buildTextSvg(text, unsupportedFonts)));
+      const textSvgParts = await Promise.all(texts.map(text => buildTextSvg(text)));
+      const iconsSvg = await buildIconsSvg();
       const svgLines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">`,
+        `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">`,
         `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>`,
         ...textSvgParts,
-        `  ${buildIconsSvg()}`,
+        `  ${iconsSvg}`,
         `</svg>`
       ];
       const svg = svgLines.join('\n');
@@ -1830,12 +2271,7 @@
       link.click();
       document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-
-      if (unsupportedFonts.size) {
-        setProjectStatus(`SVG salvo. Fontes sem curva automática: ${Array.from(unsupportedFonts).join(', ')}`, 'error', true);
-      } else {
-        setProjectStatus('SVG salvo com texto convertido em curvas.', 'success', true);
-      }
+      setProjectStatus('SVG salvo com todas as fontes do texto em curvas.', 'success', true);
     }
 
     function bindRangeDefaults(element, defaultValue, snapDistance = 2) {
@@ -2277,6 +2713,7 @@
       }
     });
 
+    setupIconCategorySelect();
     rebuildIconPalette();
     drawCanvas();
   </script>
