@@ -1337,11 +1337,11 @@
 
     function selectItem(itemType, id) {
       selectedItem = id == null ? null : { type: itemType, id };
-      if (itemType === 'icon' && id != null) draftReadyToAdd = false;
       if (itemType === 'text' && id != null) {
         const selected = getSelectedText();
         if (selected) applyTextToControls(selected);
       }
+      refreshDraftReadyState();
       updateSelectedInfo();
     }
 
@@ -1353,10 +1353,12 @@
       const pos = (x != null && y != null) ? { x, y } : getNextTextPosition();
       const t = createTextFromControls(pos.x, pos.y);
       texts.push(t);
-      selectItem('text', t.id);
-      applyTextToControls(t);
+      selectedItem = { type: 'text', id: t.id };
+      updateSelectedInfo();
+      suppressSync = true;
       input.value = '';
-      draftReadyToAdd = false;
+      suppressSync = false;
+      refreshDraftReadyState();
       await drawCanvas();
       scheduleProjectSave();
     }
@@ -1421,6 +1423,15 @@
       }
       await drawCanvas();
       scheduleProjectSave();
+    }
+
+    function computeDraftReadyState() {
+      const textValue = (document.getElementById('textInput').value || '').trim();
+      return !!textValue && !(selectedItem && selectedItem.type === 'text');
+    }
+
+    function refreshDraftReadyState() {
+      draftReadyToAdd = computeDraftReadyState();
     }
 
     function syncSelectedFromControls() {
@@ -2178,6 +2189,8 @@
       traceCanvas.height = height;
       const traceCtx = traceCanvas.getContext('2d', { willReadFrequently: true });
       traceCtx.clearRect(0, 0, width, height);
+      traceCtx.fillStyle = '#fff';
+      traceCtx.fillRect(0, 0, width, height);
       renderText(traceCtx, { ...baseState, centerX: localCenterX, centerY: localCenterY }, false);
 
       const imgd = traceCtx.getImageData(0, 0, width, height);
@@ -2452,17 +2465,15 @@
     document.querySelectorAll('input, select').forEach(el => {
       if (el.id === 'iconUpload') return;
       el.addEventListener('input', async () => {
-        const textInput = document.getElementById('textInput');
         if (el.id === 'textInput') {
           if (selectedItem && selectedItem.type === 'text') {
             selectedItem = null;
             updateSelectedInfo();
           }
-          draftReadyToAdd = textInput.value.trim().length > 0;
         } else {
-          draftReadyToAdd = textInput.value.trim().length > 0;
           syncSelectedFromControls();
         }
+        refreshDraftReadyState();
         await drawCanvas();
       });
     });
@@ -2531,7 +2542,7 @@
           return;
         }
         selectedItem = null;
-        draftReadyToAdd = false;
+        refreshDraftReadyState();
         updateSelectedInfo();
         await drawCanvas();
       }
@@ -2669,7 +2680,7 @@
           return;
         }
         selectedItem = null;
-        draftReadyToAdd = false;
+        refreshDraftReadyState();
         updateSelectedInfo();
         await drawCanvas();
       }
