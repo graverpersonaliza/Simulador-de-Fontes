@@ -723,6 +723,7 @@
     let liveEditSession = false;
     let statusTimer = null;
     let currentIconCategory = 'Favoritos';
+    let manualDraftDirty = false;
 
     function mmToPx(mm) { return mm * PX_PER_MM; }
     function pxToMm(px) { return px * MM_PER_PX; }
@@ -971,6 +972,7 @@
       document.getElementById('curveDirection').value = textObj.curveDir;
       document.getElementById('curveSpreadInput').value = Math.round(textObj.curveSpread * 100);
       suppressSync = false;
+      manualDraftDirty = false;
       draftReadyToAdd = false;
     }
 
@@ -987,6 +989,7 @@
       document.getElementById('curveDirection').value = 'none';
       document.getElementById('curveSpreadInput').value = '100';
       suppressSync = false;
+      manualDraftDirty = false;
       draftReadyToAdd = false;
     }
 
@@ -1358,6 +1361,7 @@
       suppressSync = true;
       input.value = '';
       suppressSync = false;
+      manualDraftDirty = false;
       refreshDraftReadyState();
       await drawCanvas();
       scheduleProjectSave();
@@ -1427,7 +1431,7 @@
 
     function computeDraftReadyState() {
       const textValue = (document.getElementById('textInput').value || '').trim();
-      return !!textValue && !(selectedItem && selectedItem.type === 'text');
+      return !!textValue && manualDraftDirty;
     }
 
     function refreshDraftReadyState() {
@@ -2097,6 +2101,9 @@
       body = body.replace(/<rect\b[\s\S]*?\/>/gi, '');
       body = body.replace(/<path\b(?=[^>]*\bfill=(?:"|')(?:rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)|#fff(?:fff)?|white)(?:"|'))[\s\S]*?\/>/gi, '');
       body = body.replace(/<path\b(?=[^>]*\bfill=(?:"|')none(?:"|'))(?=[^>]*\bstroke=(?:"|')(?:rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)|#fff(?:fff)?|white)(?:"|'))[\s\S]*?\/>/gi, '');
+      body = body.replace(/<path\b(?=[^>]*\bd=(?:"|')M\s*0\s+0\s+L\s*0\s+[^"']+\s+L\s*[^"']+\s+[^"']+\s+L\s*[^"']+\s+0\s+Z(?:"|'))[\s\S]*?\/>/gi, '');
+      body = body.replace(/style=("|')[^"']*\1/gi, '');
+      body = body.replace(/class=("|')[^"']*\1/gi, '');
       body = body.replace(/fill=("|')(?!none\1)[^"']*\1/gi, 'fill="#000"');
       body = body.replace(/stroke=("|')(?!none\1)[^"']*\1/gi, 'stroke="#000"');
       body = body.replace(/\sdata-name=("|')[^"']*\1/gi, '');
@@ -2227,11 +2234,6 @@
       const sizePx = mmToPx(state.sizeMM);
       const outlinePx = mmToPx(state.outlineMM);
       const rotate = state.angleDeg ? ` rotate(${svgNumber(state.angleDeg)})` : '';
-
-      if (outlinePx > 0) {
-        const tracedOutlined = await buildTracedTextSvg(state);
-        if (tracedOutlined) return tracedOutlined;
-      }
 
       const font = await loadOutlineFont(state.font);
 
@@ -2470,6 +2472,7 @@
             selectedItem = null;
             updateSelectedInfo();
           }
+          manualDraftDirty = !!String(el.value || '').trim();
         } else {
           syncSelectedFromControls();
         }
