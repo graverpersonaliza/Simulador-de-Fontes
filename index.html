@@ -15,10 +15,10 @@
 
     :root {
       --panel-width: 282px;
-      --canvas-display-width: 567px;
-      --canvas-display-height: 378px;
+      --canvas-display-width: 600px;
+      --canvas-display-height: 600px;
       --base-width: 1000;
-      --base-height: 667;
+      --base-height: 1200;
       --primary: #2563eb;
       --success: #16a34a;
       --danger: #dc2626;
@@ -381,7 +381,7 @@
       :root {
         --panel-width: 230px;
         --canvas-display-width: 520px;
-        --canvas-display-height: 347px;
+        --canvas-display-height: 520px;
       }
 
       .controls { padding: 10px; }
@@ -401,7 +401,7 @@
       <div id="howToPanel" class="howto-panel" hidden>
         <ol class="howto-list">
           <li class="howto-item"><span>Digite o nome, frase ou palavra no campo de texto.</span></li>
-          <li class="howto-item"><span>Clique em <strong>Adicionar</strong> para criar o texto no canvas.</span></li>
+          <li class="howto-item"><span>Clique em <strong>Adicionar</strong> para criar o texto na tela de edição.</span></li>
           <li class="howto-item"><span>Escolha a fonte e ajuste tamanho, ângulo, altura e largura.</span></li>
           <li class="howto-item"><span>Use a curvatura se quiser acompanhar copos, cuias ou peças arredondadas.</span></li>
           <li class="howto-item"><span>Adicione ícones e emojis pelo painel ou faça upload de SVG e PNG.</span></li>
@@ -525,16 +525,16 @@
   </div>
 
   <div class="preview">
-    <canvas id="designCanvas" width="1000" height="667"></canvas>
+    <canvas id="designCanvas" width="1200" height="1200"></canvas>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
   <script src="https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
   <script>
-    const DESIGN_WIDTH_MM = 150;
-    const DESIGN_HEIGHT_MM = 100;
-    const BASE_WIDTH = 1000;
-    const BASE_HEIGHT = 667;
+    const DESIGN_WIDTH_MM = 120;
+    const DESIGN_HEIGHT_MM = 120;
+    const BASE_WIDTH = 1200;
+    const BASE_HEIGHT = 1200;
     const PX_PER_MM = BASE_WIDTH / DESIGN_WIDTH_MM;
     const MM_PER_PX = DESIGN_WIDTH_MM / BASE_WIDTH;
     const PROJECT_KEY = 'laser_editor_project_v200';
@@ -2214,6 +2214,12 @@
       const sizePx = mmToPx(state.sizeMM);
       const outlinePx = mmToPx(state.outlineMM);
       const rotate = state.angleDeg ? ` rotate(${svgNumber(state.angleDeg)})` : '';
+
+      if (outlinePx > 0) {
+        const tracedOutlined = await buildTracedTextSvg(state);
+        if (tracedOutlined) return tracedOutlined;
+      }
+
       const font = await loadOutlineFont(state.font);
 
       if (font) {
@@ -2364,7 +2370,6 @@
       const svgLines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" viewBox="0 0 ${BASE_WIDTH} ${BASE_HEIGHT}">`,
-        `  <rect x="0" y="0" width="${BASE_WIDTH}" height="${BASE_HEIGHT}" fill="#ffffff"/>`,
         ...textSvgParts,
         `  ${iconsSvg}`,
         `</svg>`
@@ -2378,7 +2383,7 @@
       link.click();
       document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-      setProjectStatus('SVG salvo com todas as fontes do texto em curvas.', 'success', true);
+      setProjectStatus('SVG salvo em curvas com melhor compatibilidade no Corel.', 'success', true);
     }
 
     function bindRangeDefaults(element, defaultValue, snapDistance = 2) {
