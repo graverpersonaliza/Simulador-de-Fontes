@@ -316,6 +316,85 @@
       gap: 6px;
     }
 
+
+    .howto-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px;
+      margin: 0 0 12px;
+    }
+
+    .howto-toggle {
+      width: 100%;
+      margin: 0;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 800;
+      font-size: .9rem;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .howto-toggle::after {
+      content: '▾';
+      float: right;
+      transition: transform .18s ease;
+    }
+
+    .howto-toggle.is-open::after {
+      transform: rotate(180deg);
+    }
+
+    .howto-panel {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #d1d5db;
+    }
+
+    .howto-list {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .howto-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 0;
+      color: #111;
+      font-size: .85rem;
+      font-weight: 700;
+      line-height: 1.3;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .howto-item input {
+      width: 16px;
+      height: 16px;
+      margin: 1px 0 0;
+      padding: 0;
+      flex: 0 0 auto;
+      accent-color: var(--primary);
+    }
+
+    .howto-reset {
+      width: 100%;
+      margin: 0;
+      padding: 7px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #334155;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     @media (max-width: 900px) {
       :root {
         --panel-width: 230px;
@@ -334,6 +413,24 @@
 <body>
   <div class="controls">
     <h2>Simulador de Fontes Gravação Laser</h2>
+
+    <div class="howto-card">
+      <button type="button" id="howToToggle" class="howto-toggle">Como Usar</button>
+      <div id="howToPanel" class="howto-panel" hidden>
+        <div class="howto-list">
+          <label class="howto-item"><input type="checkbox" data-howto-check="1" /> <span>Digite o nome, frase ou palavra no campo de texto.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="2" /> <span>Clique em <strong>Adicionar</strong> para criar o texto no canvas.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="3" /> <span>Escolha a fonte e ajuste tamanho, ângulo, altura e largura.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="4" /> <span>Use a curvatura se quiser acompanhar copos, cuias ou peças arredondadas.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="5" /> <span>Adicione ícones e emojis pelo painel ou faça upload de SVG e PNG.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="6" /> <span>Toque ou clique no item para selecionar, mover, girar e redimensionar.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="7" /> <span>Use <strong>Duplicar</strong>, <strong>Centralizar</strong> e <strong>Excluir</strong> quando precisar ajustar a composição.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="8" /> <span>Confira a posição final no canvas antes de exportar.</span></label>
+          <label class="howto-item"><input type="checkbox" data-howto-check="9" /> <span>Baixe em <strong>Vetor SVG</strong> para abrir no Corel e trabalhar em vetor.</span></label>
+        </div>
+        <button type="button" id="resetHowToBtn" class="howto-reset">Limpar checklist</button>
+      </div>
+    </div>
 
     <label for="textInput">Texto</label>
     <input type="text" id="textInput" placeholder="Digite o nome ou frase" />
@@ -463,6 +560,7 @@
     const PROJECT_KEY = 'laser_editor_project_v200';
     const LEGACY_PROJECT_KEYS = ['laser_editor_project_v100', 'laser_fontes_project_auto_v2'];
     const AUTO_SAVE_DELAY = 450;
+
     const PRESET_ICONS = [
       { name: 'Coração', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 88C28 72 12 56 12 35c0-12 9-21 20-21 8 0 14 4 18 11 4-7 10-11 18-11 11 0 20 9 20 21 0 21-16 37-38 53Z" fill="#000"/></svg>' },
       { name: 'Coração Vazado', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 85C29 70 15 56 15 36c0-10 7-18 17-18 8 0 14 4 18 11 4-7 10-11 18-11 10 0 17 8 17 18 0 20-14 34-35 49Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
@@ -472,6 +570,9 @@
       { name: 'Laço', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M58 50c-8-12-23-20-40-20 3 16 14 30 32 34Zm4 0c8-12 23-20 40-20-3 16-14 30-32 34ZM60 48c-8 0-14 6-14 12s6 12 14 12 14-6 14-12-6-12-14-12Zm-8 24-10 20m26-20 10 20" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
       { name: 'Asas', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><path d="M58 68C35 62 18 47 10 20c12 3 22 11 30 23-3-10-2-20 5-29 10 8 15 20 13 35Zm4 0c23-6 40-21 48-48-12 3-22 11-30 23 3-10 2-20-5-29-10 8-15 20-13 35Z" fill="#000"/></svg>' },
       { name: 'Flecha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path d="M10 30h78M70 14l18 16-18 16M86 30h24" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>' },
+      { name: 'Beijo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M24 32c6 0 10 4 10 10 0 8-6 16-16 22 16 2 26 10 32 24 8-20 24-31 44-34-14-4-22-12-22-24 0-7 5-12 12-12 9 0 16 8 16 17 0 25-24 42-50 59C24 77 0 60 0 35c0-9 7-17 16-17 4 0 6 1 8 4Z" fill="#000"/></svg>' },
+      { name: 'Buquê', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110"><g fill="#000"><circle cx="32" cy="26" r="10"/><circle cx="54" cy="18" r="10"/><circle cx="76" cy="28" r="10"/><circle cx="44" cy="42" r="10"/><circle cx="68" cy="44" r="10"/></g><path d="M54 48 34 88h40L54 48Zm0 0 8 40M54 48 42 88" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></svg>' },
+      { name: 'Taças', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M22 14h26c0 18-3 28-13 36-10-8-13-18-13-36Zm50 0h26c0 18-3 28-13 36-10-8-13-18-13-36ZM35 50v22m50-22v22M20 86h30m35 0h30" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
 
       { name: 'Flor', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><circle cx="50" cy="22" r="12"/><circle cx="75" cy="38" r="12"/><circle cx="65" cy="68" r="12"/><circle cx="35" cy="68" r="12"/><circle cx="25" cy="38" r="12"/><circle cx="50" cy="50" r="10"/></g></svg>' },
       { name: 'Folha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M82 18C37 20 18 50 18 78c29 0 58-19 60-64 0 0-14 18-34 28" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
@@ -482,6 +583,8 @@
       { name: 'Pena', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M76 16c-24 8-47 27-54 60 14-8 27-18 38-30-2 7-2 14 1 21" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
       { name: 'Borboleta', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M58 46c-7-18-20-28-40-30 1 18 7 33 23 44-11 0-20 4-28 12 18 8 35 8 49-7Zm4 0c7-18 20-28 40-30-1 18-7 33-23 44 11 0 20 4 28 12-18 8-35 8-49-7Z" fill="#000"/><path d="M60 16c-2 8-2 18 0 30 2 12 2 22 0 38" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
       { name: 'Borboleta 2', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M60 42C50 24 37 15 18 12c-2 18 4 34 20 46-10 2-17 8-22 18 18 6 34 3 44-14Zm0 0c10-18 23-27 42-30 2 18-4 34-20 46 10 2 17 8 22 18-18 6-34 3-44-14Z" fill="#000"/><path d="M60 16v68" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Rosa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 20c10 0 18 8 18 18 0 4-1 8-4 11 7 2 12 9 12 17 0 10-8 18-18 18-4 0-8-1-11-4-3 3-7 4-11 4-10 0-18-8-18-18 0-8 5-15 12-17-3-3-4-7-4-11 0-10 8-18 18-18 4 0 8 1 11 4 3-3 7-4 11-4Z" fill="#000"/><path d="M49 70v20" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Galho Oliveiras', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M22 86c18-26 38-46 76-62" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/><g fill="#000"><ellipse cx="28" cy="72" rx="8" ry="4" transform="rotate(-40 28 72)"/><ellipse cx="40" cy="60" rx="8" ry="4" transform="rotate(-28 40 60)"/><ellipse cx="54" cy="48" rx="8" ry="4" transform="rotate(-16 54 48)"/><ellipse cx="70" cy="38" rx="8" ry="4" transform="rotate(8 70 38)"/><ellipse cx="84" cy="30" rx="8" ry="4" transform="rotate(20 84 30)"/><ellipse cx="36" cy="82" rx="8" ry="4" transform="rotate(20 36 82)"/><ellipse cx="50" cy="70" rx="8" ry="4" transform="rotate(28 50 70)"/><ellipse cx="64" cy="58" rx="8" ry="4" transform="rotate(36 64 58)"/></g></svg>' },
 
       { name: 'Estrela', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="m50 8 12 26 28 4-20 19 5 27-25-14-25 14 5-27L10 38l28-4Z" fill="#000"/></svg>' },
       { name: 'Estrela Vazada', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="m50 12 10 22 24 3-17 16 4 23-21-12-21 12 4-23-17-16 24-3Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
@@ -494,6 +597,8 @@
       { name: 'Roseta', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><circle cx="50" cy="16" r="10"/><circle cx="74" cy="26" r="10"/><circle cx="84" cy="50" r="10"/><circle cx="74" cy="74" r="10"/><circle cx="50" cy="84" r="10"/><circle cx="26" cy="74" r="10"/><circle cx="16" cy="50" r="10"/><circle cx="26" cy="26" r="10"/><circle cx="50" cy="50" r="12"/></g></svg>' },
       { name: 'Medalha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M34 10h12l4 16H38Zm20 0h12l-4 16H50Z" fill="#000"/><circle cx="50" cy="58" r="24" fill="none" stroke="#000" stroke-width="10"/><path d="m50 42 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z" fill="#000"/></svg>' },
       { name: 'Escudo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 10 82 22v24c0 21-12 34-32 44C30 80 18 67 18 46V22Z" fill="#000"/></svg>' },
+      { name: 'Diamante', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M24 28h52l12 18-38 40L12 46Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M24 28 50 86 76 28M38 28l12 18 12-18" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/></svg>' },
+      { name: 'Moldura Oval', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><ellipse cx="60" cy="45" rx="46" ry="28" fill="none" stroke="#000" stroke-width="8"/><path d="M18 45h84" stroke="#000" stroke-width="4" stroke-dasharray="8 8"/></svg>' },
 
       { name: 'Âncora', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 16a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm0 16v42m-22-8c0 11 10 20 22 20s22-9 22-20m-44 0H16m56 0h12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
       { name: 'Cruz', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100"><path d="M40 12v76M18 34h44" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round"/></svg>' },
@@ -512,63 +617,85 @@
       { name: 'Foguete', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><path d="M56 10c16 9 24 25 24 48L64 74l-18-18C46 35 49 20 56 10Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="60" cy="38" r="7" fill="#000"/><path d="M46 56 26 64l10-20m28 30 8 22 10-10-12-12M42 70l-16 16 22-8" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
       { name: 'Check', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 70"><path d="M12 38 32 58 78 12" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
       { name: 'Check Duplo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 70"><path d="M10 40 28 58 56 24M42 40 60 58 108 12" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Localização', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><path d="M50 106C32 82 18 66 18 46c0-18 14-32 32-32s32 14 32 32c0 20-14 36-32 60Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="46" r="10" fill="#000"/></svg>' },
+      { name: 'Chave', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><circle cx="28" cy="30" r="16" fill="none" stroke="#000" stroke-width="8"/><path d="M44 30h62m-16 0v-10m-14 10v-10" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
 
       { name: 'Nota Musical', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M58 16v44c0 10-7 18-18 18-8 0-14-5-14-12s6-12 14-12c4 0 7 1 10 3V28l26-6v34c0 10-7 18-18 18-8 0-14-5-14-12s6-12 14-12c4 0 7 1 10 3V22Z" fill="#000"/></svg>' },
       { name: 'Clave de Sol', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 140"><path d="M48 14c-12 0-22 9-22 20 0 8 6 15 14 15 6 0 11-5 11-11 0-6-4-10-10-10-3 0-5 1-7 3 2-10 12-17 24-17 14 0 24 10 24 24 0 21-18 30-32 40-12 8-21 18-21 31 0 12 10 21 23 21 14 0 24-9 24-22 0-10-7-17-16-17-8 0-14 5-14 13 0 7 5 12 12 12 1 0 3 0 4-1-2 4-7 7-12 7-9 0-16-6-16-15 0-10 8-19 22-28 18-12 38-23 38-47C90 27 72 14 48 14ZM41 6v128" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Microfone', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><rect x="34" y="14" width="32" height="44" rx="16" fill="none" stroke="#000" stroke-width="8"/><path d="M24 48c0 14 12 26 26 26s26-12 26-26M50 74v24m-18 0h36" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Fone Ouvido', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M18 56V44c0-18 14-32 32-32s32 14 32 32v12" fill="none" stroke="#000" stroke-width="8"/><rect x="12" y="50" width="16" height="26" rx="8" fill="#000"/><rect x="72" y="50" width="16" height="26" rx="8" fill="#000"/></svg>' },
+      { name: 'Violão', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140"><path d="M54 16c8 12 9 28 2 42 17 7 24 26 18 42-6 15-22 24-38 20-17-4-28-20-25-37 2-12 10-21 21-26-5-11-5-24 1-35" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="48" cy="68" r="8" fill="none" stroke="#000" stroke-width="6"/><path d="M54 16h20M68 16v38" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/></svg>' },
+      { name: 'Claquete', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><path d="M12 34h96v44H12Z" fill="none" stroke="#000" stroke-width="8"/><path d="M12 34 26 12h96L108 34" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M28 12 40 34M52 12 64 34M76 12 88 34" fill="none" stroke="#000" stroke-width="6"/></svg>' },
+      { name: 'Paleta', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 90"><path d="M54 12c24 0 44 17 44 38 0 15-10 22-20 22h-9c-7 0-11 8-7 14 2 3 1 6-2 8-4 2-8 2-12 0C26 83 12 64 12 44 12 26 31 12 54 12Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="36" cy="34" r="4" fill="#000"/><circle cx="52" cy="28" r="4" fill="#000"/><circle cx="70" cy="34" r="4" fill="#000"/><circle cx="76" cy="52" r="4" fill="#000"/></svg>' },
+      { name: 'Pincel', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path d="M78 16 104 42 54 92c-11 0-18-7-18-18Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M18 82c10 0 16-4 20-12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Filme', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><rect x="18" y="18" width="84" height="54" fill="none" stroke="#000" stroke-width="8"/><path d="M18 34h84M36 18v54M60 18v54M84 18v54" fill="none" stroke="#000" stroke-width="6"/></svg>' },
+      { name: 'Disco', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="none" stroke="#000" stroke-width="8"/><circle cx="50" cy="50" r="8" fill="#000"/></svg>' },
+      { name: 'Máscaras', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><path d="M20 20c10 0 20 4 28 12v30c-8 10-18 14-28 14S4 72 4 62V32c8-8 16-12 16-12Zm80 0c10 0 20 4 28 12v30c0 10-8 14-16 14s-20-4-28-14V32c8-8 18-12 28-12Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M18 48c4 4 9 6 14 6s10-2 14-6m52 6c4-4 9-6 14-6s10 2 14 6" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/></svg>' },
 
       { name: 'Pata', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#000"><ellipse cx="28" cy="30" rx="9" ry="13"/><ellipse cx="48" cy="22" rx="9" ry="13"/><ellipse cx="68" cy="30" rx="9" ry="13"/><ellipse cx="80" cy="50" rx="9" ry="13"/><path d="M30 70c0-12 10-22 22-22 16 0 28 11 28 26 0 9-8 14-18 14-7 0-10-3-16-3-6 0-10 3-16 3-11 0-18-7-18-18 0-9 8-17 18-17 0 0 0 0 0 0Z"/></g></svg>' },
       { name: 'Pegadas Bebê', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><g fill="#000"><ellipse cx="36" cy="52" rx="14" ry="22" transform="rotate(-18 36 52)"/><ellipse cx="26" cy="20" rx="5" ry="7"/><ellipse cx="36" cy="14" rx="5" ry="7"/><ellipse cx="48" cy="16" rx="5" ry="7"/><ellipse cx="56" cy="24" rx="5" ry="7"/><ellipse cx="82" cy="58" rx="14" ry="22" transform="rotate(18 82 58)"/><ellipse cx="70" cy="28" rx="5" ry="7"/><ellipse cx="82" cy="20" rx="5" ry="7"/><ellipse cx="94" cy="22" rx="5" ry="7"/><ellipse cx="102" cy="30" rx="5" ry="7"/></g></svg>' },
       { name: 'Ursinho', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="28" cy="24" r="12" fill="#000"/><circle cx="72" cy="24" r="12" fill="#000"/><circle cx="50" cy="54" r="30" fill="#000"/><circle cx="38" cy="48" r="4" fill="#fff"/><circle cx="62" cy="48" r="4" fill="#fff"/><ellipse cx="50" cy="64" rx="10" ry="8" fill="#fff"/><circle cx="50" cy="61" r="4" fill="#000"/><path d="M44 70c3 4 5 5 6 5s3-1 6-5" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/></svg>' },
+      { name: 'Osso', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path d="M18 18c0-8 6-14 14-14 6 0 11 3 13 8h30c2-5 7-8 13-8 8 0 14 6 14 14 0 4-2 8-5 10 3 2 5 6 5 10 0 8-6 14-14 14-6 0-11-3-13-8H45c-2 5-7 8-13 8-8 0-14-6-14-14 0-4 2-8 5-10-3-2-5-6-5-10Z" fill="#000"/></svg>' },
+      { name: 'Gatinho', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M22 28 34 12l10 14m44 2L76 12 66 26" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="56" r="30" fill="none" stroke="#000" stroke-width="8"/><circle cx="38" cy="52" r="4" fill="#000"/><circle cx="62" cy="52" r="4" fill="#000"/><path d="M50 60l-4 4h8Zm-18 6H18m14 6H18m50-6h14m-14 6h14M44 72c4 4 8 4 12 0" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Cachorrinho', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M24 28c2-10 8-16 18-16h16c10 0 16 6 18 16" fill="none" stroke="#000" stroke-width="8"/><path d="M28 28c-8 0-14 6-14 14v18c0 16 16 28 36 28s36-12 36-28V42c0-8-6-14-14-14Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="38" cy="52" r="4" fill="#000"/><circle cx="62" cy="52" r="4" fill="#000"/><path d="M44 68c4 3 8 3 12 0" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/></svg>' },
+      { name: 'Mamadeira', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120"><path d="M30 10h20v10H30Zm-4 10h28v16l10 16v40c0 10-8 18-18 18H34c-10 0-18-8-18-18V52l10-16Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M30 62h20" stroke="#000" stroke-width="6" stroke-linecap="round"/></svg>' },
+      { name: 'Chocalho', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><circle cx="42" cy="36" r="22" fill="none" stroke="#000" stroke-width="8"/><path d="M42 58v36c0 8 6 14 14 14 6 0 10-4 10-10 0-8-6-14-14-14h-8" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      { name: 'Bebê', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="34" r="18" fill="none" stroke="#000" stroke-width="8"/><circle cx="43" cy="32" r="3" fill="#000"/><circle cx="57" cy="32" r="3" fill="#000"/><path d="M44 42c4 3 8 3 12 0" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/><path d="M26 86c0-16 11-28 24-28s24 12 24 28" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carrinho Bebê', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><path d="M18 26h44l14 24H28Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M76 50c0 16-14 28-30 28S18 66 18 50h58Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="40" cy="78" r="6" fill="#000"/><circle cx="74" cy="78" r="6" fill="#000"/></svg>' },
 
       { name: 'Joinha', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M46 44V18c0-5 4-9 9-9 4 0 8 3 9 8l4 24h12c8 0 13 8 10 16l-9 24c-2 5-7 9-12 9H34c-6 0-10-4-10-10V44Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><path d="M18 42h16v46H18Z" fill="#000"/></svg>' },
       { name: 'Mãos Oração', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M44 12c6 7 10 16 12 28 1 5 1 13 0 24l-10 22-18-8 10-23c-1-10-1-20 1-30 1-6 3-10 5-13Zm12 40c-1-10-1-20 1-30 1-6 3-10 5-13 6 7 10 16 12 28 1 5 1 13 0 24l10 23-18 8-10-22c-1-11-1-19 0-24Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/></svg>' },
-
       { name: 'Carinha Feliz', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M32 58c6 10 13 14 18 14s12-4 18-14" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
       { name: 'Carinha Piscando', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M30 40h12" stroke="#000" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M32 60c6 8 13 12 18 12s12-4 18-12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
       { name: 'Carinha Beijo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M44 61c4-6 8-6 12 0-4 6-8 6-12 0Z" fill="#000"/></svg>' },
       { name: 'Carinha Apaixonada', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M31 36c0-4 3-7 7-7 3 0 5 1 6 4 1-3 3-4 6-4 4 0 7 3 7 7 0 7-5 11-12 17-7-6-14-10-14-17Zm30 0c0-4 3-7 7-7 3 0 5 1 6 4 1-3 3-4 6-4 4 0 7 3 7 7 0 7-5 11-12 17-7-6-14-10-14-17Z" fill="#000"/><path d="M32 62c6 8 13 12 18 12s12-4 18-12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
       { name: 'Carinha Óculos', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M24 39h15a8 8 0 0 1 8 8v3a8 8 0 0 1-8 8H29a8 8 0 0 1-8-8v-3a8 8 0 0 1 3-6Zm37 0h15a8 8 0 0 1 8 8v3a8 8 0 0 1-8 8H66a8 8 0 0 1-8-8v-3a8 8 0 0 1 3-6ZM47 47h11" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M33 69c6 6 12 9 17 9s11-3 17-9" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
       { name: 'Carinha Rindo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M28 39c5 6 10 8 16 8s11-2 16-8m-32 0c5 6 10 8 16 8s11-2 16-8" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/><path d="M30 60h40c-3 12-12 18-20 18s-17-6-20-18Z" fill="#000"/></svg>' },
-      { name: 'Carinha Surpresa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="38" r="5" fill="#000"/><circle cx="64" cy="38" r="5" fill="#000"/><ellipse cx="50" cy="64" rx="8" ry="10" fill="none" stroke="#000" stroke-width="8"/></svg>' }
-
+      { name: 'Carinha Surpresa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="38" r="5" fill="#000"/><circle cx="64" cy="38" r="5" fill="#000"/><ellipse cx="50" cy="64" rx="8" ry="10" fill="none" stroke="#000" stroke-width="8"/></svg>' },
+      { name: 'Carinha Triste', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M34 70c5-8 10-12 16-12s11 4 16 12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Chorando', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M34 70c5-8 10-12 16-12s11 4 16 12" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/><path d="M68 46c4 6 4 12 0 18" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Bravo', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><path d="M28 36l12 6m20 0 12-6" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/><circle cx="38" cy="44" r="4" fill="#000"/><circle cx="62" cy="44" r="4" fill="#000"/><path d="M36 70h28" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Festa', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="54" r="34" fill="none" stroke="#000" stroke-width="8"/><path d="M44 8 74 22 54 38Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/><circle cx="38" cy="48" r="4" fill="#000"/><circle cx="62" cy="48" r="4" fill="#000"/><path d="M34 66c5 6 10 8 16 8s11-2 16-8" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/></svg>' },
+      { name: 'Carinha Pensando', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="8"/><circle cx="36" cy="40" r="5" fill="#000"/><circle cx="64" cy="40" r="5" fill="#000"/><path d="M40 66h16" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round"/><path d="M54 62c4 2 6 5 6 10" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/></svg>' }
     ];
 
     const PRESET_ICON_CATEGORIES = [
       {
-        title: 'Mais usados no WhatsApp',
-        names: ['Coração','Coração Duplo','Coração Brilhando','Brilho','Carinha Feliz','Carinha Beijo','Carinha Apaixonada','Joinha','Mãos Oração','Chama','Foguete','Presente','Confete','Mensagem','Check','Check Duplo']
+        title: 'Favoritos',
+        names: ['Coração','Coração Brilhando','Brilho','Carinha Feliz','Carinha Beijo','Carinha Apaixonada','Joinha','Mãos Oração','Foguete','Check']
       },
       {
         title: 'Amor e Casamento',
-        names: ['Coração','Coração Vazado','Coração Duplo','Coração Brilhando','Aliança','Laço','Asas','Flecha']
+        names: ['Coração','Coração Vazado','Coração Duplo','Coração Brilhando','Aliança','Laço','Asas','Flecha','Beijo','Taças']
       },
       {
         title: 'Floral e Natureza',
-        names: ['Flor','Folha','Ramo','Trevo','Margarida','Tulipa','Pena','Borboleta','Borboleta 2']
+        names: ['Flor','Folha','Ramo','Trevo','Margarida','Tulipa','Pena','Borboleta','Rosa','Galho Oliveiras']
       },
       {
         title: 'Luxo e Ornamentos',
-        names: ['Estrela','Estrela Vazada','Coroa','Losango','Medalhão','Infinito','Arabesco','Brilho','Roseta','Medalha','Escudo']
+        names: ['Estrela','Estrela Vazada','Coroa','Losango','Medalhão','Infinito','Arabesco','Brilho','Roseta','Diamante']
       },
       {
         title: 'Símbolos e Elementos',
-        names: ['Âncora','Cruz','Sol','Lua','Raio','Chama','Pomba','Bigode','Balão Fala','Mensagem','Telefone','Câmera','Presente','Confete','Foguete','Check','Check Duplo']
+        names: ['Âncora','Cruz','Sol','Lua','Raio','Chama','Pomba','Bigode','Mensagem','Localização']
       },
       {
         title: 'Música e Arte',
-        names: ['Nota Musical','Clave de Sol']
+        names: ['Nota Musical','Clave de Sol','Microfone','Fone Ouvido','Violão','Claquete','Paleta','Pincel','Filme','Disco']
       },
       {
         title: 'Pets e Infantil',
-        names: ['Pata','Pegadas Bebê','Ursinho']
+        names: ['Pata','Pegadas Bebê','Ursinho','Osso','Gatinho','Cachorrinho','Mamadeira','Chocalho','Bebê','Carrinho Bebê']
       },
       {
         title: 'Emojis',
-        names: ['Carinha Feliz','Carinha Piscando','Carinha Beijo','Carinha Apaixonada','Carinha Óculos','Carinha Rindo','Carinha Surpresa','Joinha','Mãos Oração']
+        names: ['Carinha Feliz','Carinha Piscando','Carinha Beijo','Carinha Apaixonada','Carinha Óculos','Carinha Rindo','Carinha Surpresa','Carinha Triste','Carinha Chorando','Carinha Festa']
       }
     ];
 
     const PRESET_ICON_LOOKUP = new Map(PRESET_ICONS.map(item => [item.name, item]));
+
 
 
     const OUTLINE_FONT_URLS = {
@@ -615,7 +742,7 @@
     let saveTimer = null;
     let liveEditSession = false;
     let statusTimer = null;
-    let currentIconCategory = 'Mais usados no WhatsApp';
+    let currentIconCategory = 'Favoritos';
 
     function mmToPx(mm) { return mm * PX_PER_MM; }
     function pxToMm(px) { return px * MM_PER_PX; }
@@ -2712,6 +2839,59 @@
         await drawCanvas();
       }
     });
+
+
+
+    const HOW_TO_KEY = 'laser_editor_howto_checklist_v1';
+    const howToToggle = document.getElementById('howToToggle');
+    const howToPanel = document.getElementById('howToPanel');
+    const resetHowToBtn = document.getElementById('resetHowToBtn');
+    const howToChecks = Array.from(document.querySelectorAll('[data-howto-check]'));
+
+    function readHowToState() {
+      try {
+        const raw = localStorage.getItem(HOW_TO_KEY);
+        return raw ? JSON.parse(raw) : { open: false, checks: {} };
+      } catch (e) {
+        return { open: false, checks: {} };
+      }
+    }
+
+    function writeHowToState() {
+      const state = {
+        open: !howToPanel.hidden,
+        checks: Object.fromEntries(howToChecks.map(input => [input.dataset.howtoCheck, input.checked]))
+      };
+      try {
+        localStorage.setItem(HOW_TO_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function applyHowToState() {
+      const state = readHowToState();
+      howToPanel.hidden = !state.open;
+      howToToggle.classList.toggle('is-open', state.open);
+      howToChecks.forEach(input => {
+        input.checked = !!(state.checks && state.checks[input.dataset.howtoCheck]);
+      });
+    }
+
+    howToToggle.addEventListener('click', () => {
+      howToPanel.hidden = !howToPanel.hidden;
+      howToToggle.classList.toggle('is-open', !howToPanel.hidden);
+      writeHowToState();
+    });
+
+    howToChecks.forEach(input => {
+      input.addEventListener('change', writeHowToState);
+    });
+
+    resetHowToBtn.addEventListener('click', () => {
+      howToChecks.forEach(input => { input.checked = false; });
+      writeHowToState();
+    });
+
+    applyHowToState();
 
     setupIconCategorySelect();
     rebuildIconPalette();
