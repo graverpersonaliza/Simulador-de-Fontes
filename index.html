@@ -356,43 +356,25 @@
     }
 
     .howto-list {
+      margin: 0;
+      padding-left: 22px;
       display: grid;
       gap: 8px;
-      margin-bottom: 10px;
     }
 
     .howto-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin: 0;
       color: #111;
       font-size: .85rem;
       font-weight: 700;
       line-height: 1.3;
       text-transform: none;
       letter-spacing: normal;
+      padding-left: 2px;
     }
 
-    .howto-item input {
-      width: 16px;
-      height: 16px;
-      margin: 1px 0 0;
-      padding: 0;
-      flex: 0 0 auto;
-      accent-color: var(--primary);
-    }
-
-    .howto-reset {
-      width: 100%;
-      margin: 0;
-      padding: 7px 8px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: #fff;
-      color: #334155;
-      font-weight: 700;
-      cursor: pointer;
+    .howto-item::marker {
+      color: var(--primary);
+      font-weight: 800;
     }
 
     @media (max-width: 900px) {
@@ -417,18 +399,17 @@
     <div class="howto-card">
       <button type="button" id="howToToggle" class="howto-toggle">Como Usar</button>
       <div id="howToPanel" class="howto-panel" hidden>
-        <div class="howto-list">
-          <label class="howto-item"><input type="checkbox" data-howto-check="1" /> <span>Digite o nome, frase ou palavra no campo de texto.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="2" /> <span>Clique em <strong>Adicionar</strong> para criar o texto no canvas.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="3" /> <span>Escolha a fonte e ajuste tamanho, ângulo, altura e largura.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="4" /> <span>Use a curvatura se quiser acompanhar copos, cuias ou peças arredondadas.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="5" /> <span>Adicione ícones e emojis pelo painel ou faça upload de SVG e PNG.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="6" /> <span>Toque ou clique no item para selecionar, mover, girar e redimensionar.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="7" /> <span>Use <strong>Duplicar</strong>, <strong>Centralizar</strong> e <strong>Excluir</strong> quando precisar ajustar a composição.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="8" /> <span>Confira a posição final no canvas antes de exportar.</span></label>
-          <label class="howto-item"><input type="checkbox" data-howto-check="9" /> <span>Baixe em <strong>Vetor SVG</strong> para abrir no Corel e trabalhar em vetor.</span></label>
-        </div>
-        <button type="button" id="resetHowToBtn" class="howto-reset">Limpar checklist</button>
+        <ol class="howto-list">
+          <li class="howto-item"><span>Digite o nome, frase ou palavra no campo de texto.</span></li>
+          <li class="howto-item"><span>Clique em <strong>Adicionar</strong> para criar o texto no canvas.</span></li>
+          <li class="howto-item"><span>Escolha a fonte e ajuste tamanho, ângulo, altura e largura.</span></li>
+          <li class="howto-item"><span>Use a curvatura se quiser acompanhar copos, cuias ou peças arredondadas.</span></li>
+          <li class="howto-item"><span>Adicione ícones e emojis pelo painel ou faça upload de SVG e PNG.</span></li>
+          <li class="howto-item"><span>Toque ou clique no item para selecionar, mover, girar e redimensionar.</span></li>
+          <li class="howto-item"><span>Use <strong>Duplicar</strong>, <strong>Centralizar</strong> e <strong>Excluir</strong> quando precisar ajustar a composição.</span></li>
+          <li class="howto-item"><span>Confira a posição final na tela de edição antes de baixar.</span></li>
+          <li class="howto-item"><span>Baixe em Vetor SVG ou Imagem PNG.</span></li>
+        </ol>
       </div>
     </div>
 
@@ -440,7 +421,6 @@
       <button type="button" id="centerTextBtn">Centralizar</button>
       <button type="button" id="deleteTextBtn">Excluir</button>
     </div>
-    <div class="hint">Digite um nome ou frase e use Adicionar ou Enter para criar. Toque no texto ou ícone para selecionar, mover, redimensionar pelos cantos e editar.</div>
     <div id="selectedInfo" class="selected-chip">Nenhum item selecionado</div>
 
     <label for="fontSelect">Fonte</label>
@@ -2842,28 +2822,22 @@
 
 
 
-    const HOW_TO_KEY = 'laser_editor_howto_checklist_v1';
+    const HOW_TO_KEY = 'laser_editor_howto_panel_v2';
     const howToToggle = document.getElementById('howToToggle');
     const howToPanel = document.getElementById('howToPanel');
-    const resetHowToBtn = document.getElementById('resetHowToBtn');
-    const howToChecks = Array.from(document.querySelectorAll('[data-howto-check]'));
 
     function readHowToState() {
       try {
         const raw = localStorage.getItem(HOW_TO_KEY);
-        return raw ? JSON.parse(raw) : { open: false, checks: {} };
+        return raw ? JSON.parse(raw) : { open: false };
       } catch (e) {
-        return { open: false, checks: {} };
+        return { open: false };
       }
     }
 
     function writeHowToState() {
-      const state = {
-        open: !howToPanel.hidden,
-        checks: Object.fromEntries(howToChecks.map(input => [input.dataset.howtoCheck, input.checked]))
-      };
       try {
-        localStorage.setItem(HOW_TO_KEY, JSON.stringify(state));
+        localStorage.setItem(HOW_TO_KEY, JSON.stringify({ open: !howToPanel.hidden }));
       } catch (e) {}
     }
 
@@ -2871,23 +2845,11 @@
       const state = readHowToState();
       howToPanel.hidden = !state.open;
       howToToggle.classList.toggle('is-open', state.open);
-      howToChecks.forEach(input => {
-        input.checked = !!(state.checks && state.checks[input.dataset.howtoCheck]);
-      });
     }
 
     howToToggle.addEventListener('click', () => {
       howToPanel.hidden = !howToPanel.hidden;
       howToToggle.classList.toggle('is-open', !howToPanel.hidden);
-      writeHowToState();
-    });
-
-    howToChecks.forEach(input => {
-      input.addEventListener('change', writeHowToState);
-    });
-
-    resetHowToBtn.addEventListener('click', () => {
-      howToChecks.forEach(input => { input.checked = false; });
       writeHowToState();
     });
 
